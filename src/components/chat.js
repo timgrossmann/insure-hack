@@ -38,9 +38,8 @@ export default class Chat extends Component {
         <h1>{chat.name}</h1>
       </div>
 
-      <div>
+      <div className='Messages'>
         {messagesHTML}
-
       </div>
 
 
@@ -76,7 +75,6 @@ function Message ({ message, currentUser, name }) {
       nameHTML = <div className='Message__name'>{name}</div>;
     }
   }
-
 
 
   return (
