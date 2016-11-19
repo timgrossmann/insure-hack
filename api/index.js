@@ -22,18 +22,6 @@ needAuth = {}
 dogQuest = {}
 questionsStarted = {}
 
-/*
-dogQuest = {
-  clientId: {
-    questionNum: 2,
-    answers: {
-      1: 'pitbull'
-    }
-  }
-}
-* */
-
-
 app.get('/webhook', function(req, res) {
   if (req.query['hub.mode'] === 'subscribe' &&
     req.query['hub.verify_token'] === 'token_for_the_test') {
@@ -58,11 +46,11 @@ app.post('/agent', function (req, res) {
   switch (message) {
     case '--authenticate':
       needAuth[clientId] = true
-      sendAuthenticationRequest(clientId)
+      sendAuthenticationRequest(clientId, SERVER_ID, '')
       break
     case '--doginsurance':
       dogQuest[clientId] = { questionNum: 1, answers: {}}
-      sendInsuranceQuestion(clientId, 'What is the dogs race ?')
+      sendInsuranceQuestion(clientId, SERVER_ID, 'What is the dogs race ?')
       questionsStarted[clientId] = true
       break
     default:
@@ -104,20 +92,20 @@ function receivedMessage(event) {
   var timeOfMessage = Date.now()
   var message = event.message
 
-  //console.log(senderID, recipientID)
-
-  var messageId = message.mid
-
   var messageText = message.text
-  var messageAttachments = message.attachments
 
   if (senderID !== SERVER_ID) {
     if (messageText) {
+
+      console.log(senderID, recipientID)
 
       updateMessages(senderID, senderID, timeOfMessage, messageText)
 
       if (needAuth[senderID]) {
        if(/[0-9]{11}/.test(messageText)) {
+
+         console.log(senderID, recipientID)
+
          sendMessageToClient(senderID, recipientID, 'Thank you!\nYou have succefully authenticated')
          needAuth[senderID] = false
          addInsuranceIdToClient(senderID, messageText)
@@ -128,14 +116,12 @@ function receivedMessage(event) {
        }
       } else if (questionsStarted[senderID]) {
 
-        console.log(questionsStarted[senderID], dogQuest[senderID].questionNum)
-
         switch(dogQuest[senderID].questionNum) {
           case 1:
             if (messageText.indexOf('?') === -1 && messageText.split(' ').length === 1) {
               dogQuest[senderID].questionNum += 1
               dogQuest[senderID].answers[1] = messageText
-              sendInsuranceQuestion(senderID, 'What is his chipnumber ?\n(You can find it in his idcard)')
+              sendInsuranceQuestion(senderID, recipientID, 'What is his chipnumber ?\n(You can find it in his idcard)')
             } else {
               sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
             }
@@ -146,7 +132,7 @@ function receivedMessage(event) {
               console.log('case 2 inner')
               dogQuest[senderID].questionNum += 1
               dogQuest[senderID].answers[2] = messageText
-              sendInsuranceQuestionReplies(senderID, 'Is it a compulsory insurance ?\n(yes/no)')
+              sendInsuranceQuestionReplies(senderID, recipientID, 'Is it a compulsory insurance ?\n(yes/no)')
             } else {
               sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
             }
@@ -157,7 +143,7 @@ function receivedMessage(event) {
               console.log('3. case inner')
               dogQuest[senderID].answers[3] = messageText
               sendMessageToClient(senderID, recipientID, 'Thank you!\nYour offer is being created')
-              sendOfferToClient(senderID, recipientID)
+              //sendOfferToClient(senderID, recipientID)
               questionsStarted[senderID] = false
             } else {
               sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
@@ -165,14 +151,8 @@ function receivedMessage(event) {
         }
       } else {
         switch (messageText) {
-          case 'buttons':
-            sendButtonSelection(senderID)
-            break
           case 'help':
-            sendHelpMessage(senderID)
-            break
-          case 'generic':
-            sendGenericMessage(senderID)
+            sendHelpMessage(senderID, recipientID, '')
             break
           default:
             break
@@ -183,35 +163,62 @@ function receivedMessage(event) {
 }
 
 function sendOfferToClient (clientId, agentId) {
-  var messageData = {
-    recipient: {
-      id: clientId
-    },
-    sender: {
-      id: agentId
-    },
-    message: {
-      attachment: {
-        type: "template",
-        payload: {
-          template_type: "generic",
-          elements: [{
-            title: "Dog Insurance",
-            subtitle: "Your personal special insurhack offer.",
-            item_url: "https://www.zurich.com",
-            image_url: "http://www.smartinvestor.com.my/wp-content/uploads/zurich-logo.jpg",
-            buttons: [{
-              type: "web_url",
-              url: "https://www.zurich.com",
-              title: "Check out the offer"
-            }],
-          }]
+
+  getPrice().then(function (price) {
+    var title = "Dog Insurance nur " + price
+
+    var messageData = {
+      recipient: {
+        id: clientId
+      },
+      sender: {
+        id: agentId
+      },
+      message: {
+        attachment: {
+          type: "template",
+          payload: {
+            template_type: "generic",
+            elements: [{
+              title: title,
+              subtitle: "Your personal special insurhack offer.",
+              item_url: "https://www.zurich.com",
+              image_url: "http://www.smartinvestor.com.my/wp-content/uploads/zurich-logo.jpg",
+              buttons: [{
+                type: "web_url",
+                url: "https://www.zurich.com",
+                title: "Check out the offer"
+              }],
+            }]
+          }
         }
       }
     }
-  }
 
-  callSendAPI(messageData)
+    callSendAPI(messageData)
+  })
+}
+
+function getPrice() {
+  return new Promise(function (resolve, reject) {
+
+    request({
+      uri: 'https://graph.facebook.com/v2.6/me/messages',
+      qs: { access_token: 'EAAZAQD7oFTL4BAMqRRK7uNA3TmEl2uDcfM4m8IuTvBlqGvm2NvtwLFp60CAWw9z50lsuJZBS7gwHbIUX7KcWhNoOp4jdE6y34UycE09pCdHBBVOSXwm67sOrSQVVtA0N0WcVly6q4f32ZBtsX0a2eaO0B6rJ9SXwhEnsfZAZC4QZDZD' },
+      method: 'POST',
+      json: messageData
+
+    }, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        var recipientId = body.recipient_id
+        var messageId = body.message_id
+
+      } else {
+        console.error("Unable to send message.")
+      }
+    })
+
+  })
 }
 
 function addInsuranceIdToClient (clientId, insuranceId) {
@@ -220,6 +227,8 @@ function addInsuranceIdToClient (clientId, insuranceId) {
 }
 
 function updateMessages (clientId, sender, timestamp, message) {
+
+  console.log('updateMessage', clientId, sender)
 
   checkForUser(clientId).then(function (result) {
     if (result) {
@@ -234,8 +243,9 @@ function updateMessages (clientId, sender, timestamp, message) {
       //console.log(message, 'added')
 
     } else {
-      addUser(clientId, message, timestamp)
-      sendMessageToAgent(clientId, 'Your Agent was informed.\n\You will receive a response very soon.')
+      addUser(clientId, sender, message, timestamp).then(function (result) {
+        sendMessageToClient(clientId, SERVER_ID, 'Your Agent was informed.\n\You will receive a response very soon.')
+      })
     }
   })
 }
@@ -251,34 +261,37 @@ function checkForUser (clientId) {
   })
 }
 
-function addUser (clientId, message, timestamp) {
-  const chat = firebase.database().ref('chat/' + clientId)
-  chat.once('value').then(function (snapshot) {
+function addUser (clientId, sender, message, timestamp) {
+  return new Promise(function (resolve, reject) {
+    const chat = firebase.database().ref('chat/' + clientId)
+    chat.once('value').then(function (snapshot) {
 
-    getUserInfo(clientId).then(function (result) {
-      var userData = {
-        id: clientId,
-        name: result.firstName + ' ' + result.lastName,
-        img: result.userImg,
-        assingedAdviser: null,
-        value: {},
-      }
+      getUserInfo(clientId).then(function (result) {
+        var userData = {
+          id: clientId,
+          name: result.firstName + ' ' + result.lastName,
+          img: result.userImg,
+          assingedAdviser: null,
+          value: {},
+        }
 
-      var newMessage = {
-        'sender': clientId,
-        'value': message,
-        'timestamp': Date.now()
-      }
+        var newMessage = {
+          'sender': clientId,
+          'value': message,
+          'timestamp': Date.now()
+        }
 
-      chat.set(userData)
+        chat.set(userData)
 
-      firebase.database().ref('chat/' + clientId).child('/messages/').push(newMessage)
-      console.log('User added')
+        firebase.database().ref('chat/' + clientId).child('/messages/').push(newMessage)
+        console.log('User added')
+        resolve()
+      })
     })
   })
 }
 
-function sendInsuranceQuestionReplies (clientId, message) {
+function sendInsuranceQuestionReplies (clientId, agentId, message) {
   console.log('Questions started')
 
   var messageData = {
@@ -302,10 +315,12 @@ function sendInsuranceQuestionReplies (clientId, message) {
     }
   }
 
+  updateMessages(clientId, agentId, Date.now(), message)
+
   callSendAPI(messageData)
 }
 
-function sendInsuranceQuestion (clientId, message) {
+function sendInsuranceQuestion (clientId, agentId, message) {
   console.log('Questions started')
 
   var messageData = {
@@ -317,20 +332,24 @@ function sendInsuranceQuestion (clientId, message) {
     }
   }
 
+  updateMessages(clientId, agentId, Date.now(), message)
+
   callSendAPI(messageData)
 }
 
 
-function sendAuthenticationRequest (recipientId) {
+function sendAuthenticationRequest (recipientId, agentId, message) {
   console.log('Asked for authentification required')
+
+  message = "Please verify your insurance social security number.\nEither send it per Messenger or tell me to call you.\n\n" +
+    "You can find it on your insurance card."
 
   var messageData = {
     "recipient": {
       "id": recipientId
     },
     message: {
-      text: "Please verify your insurance social security number.\nEither send it per Messenger or tell me to call you.\n\n" +
-      "You can find it on your insurance car.",
+      text: message,
       quick_replies: [
         {
           content_type: "text",
@@ -341,90 +360,24 @@ function sendAuthenticationRequest (recipientId) {
       }
     }
 
+  updateMessages(recipientId, agentId, Date.now(), message)
+
   callSendAPI(messageData)
 }
 
-function sendButtonSelection(recipientId) {
+function sendHelpMessage(recipientId, agentId, message) {
+  message = 'Ask me anything you want about your insurance or any insurance related questions.\nI will answer them as soon as possible.'
+
   var messageData = {
     recipient: {
       id: recipientId
     },
     message: {
-      text: "How many square Meters is your flat?:",
-      quick_replies: [
-        {
-          content_type: "text",
-          title: "20m^2",
-          payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_20"
-        },
-        {
-          content_type: "text",
-          title: "40^2",
-          payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_40"
-        }
-      ]
+      text: message
     }
   }
 
-  callSendAPI(messageData)
-}
-
-function sendHelpMessage(recipientId) {
-  var messageData = {
-    recipient: {
-      id: recipientId
-    },
-    message: {
-      text: 'Ask me anything you want about your insurance or any insurance related questions.\nI will answer them as soon as possible.'
-    }
-  }
-
-  callSendAPI(messageData)
-}
-
-function sendGenericMessage(recipientId) {
-  var messageData = {
-    recipient: {
-      id: recipientId
-    },
-    message: {
-      attachment: {
-        type: "template",
-        payload: {
-          template_type: "generic",
-          elements: [{
-            title: "rift",
-            subtitle: "Next-generation virtual reality",
-            item_url: "https://www.oculus.com/en-us/rift/",
-            image_url: "http://messengerdemo.parseapp.com/img/rift.png",
-            buttons: [{
-              type: "web_url",
-              url: "https://www.oculus.com/en-us/rift/",
-              title: "Open Web URL"
-            }, {
-              type: "postback",
-              title: "Call Postback",
-              payload: "Payload for first bubble",
-            }],
-          }, {
-            title: "touch",
-            subtitle: "Your Hands, Now in VR",
-            item_url: "https://www.oculus.com/en-us/touch/",
-            image_url: "http://messengerdemo.parseapp.com/img/touch.png",
-            buttons: [{
-              type: "web_url",
-              url: "https://www.oculus.com/en-us/touch/",
-              title: "Open Web URL"
-            }, {
-              type: "postback",
-              title: "Call Postback",
-              payload: "Payload for second bubble",
-            }]
-          }]
-        }
-      }
-    }
-  }
+  updateMessages(recipientId, agentId, Date.now(), message)
 
   callSendAPI(messageData)
 }
@@ -445,20 +398,6 @@ function sendMessageToClient(recipientId, agentId, messageText) {
   console.log('Answer from Agent: ', messageText)
 
   updateMessages(recipientId, agentId, Date.now(), messageText)
-  //if (agentId !== SERVER_ID) {
-    callSendAPI(messageData)
-  //}
-}
-
-function sendMessageToAgent(agentId, messageText) {
-  var messageData = {
-    recipient: {
-      id: agentId
-    },
-    message: {
-      text: messageText
-    }
-  }
 
   callSendAPI(messageData)
 }
@@ -504,19 +443,6 @@ function getUserInfo (userId) {
       }
     })
   })
-}
-
-function receivedPostback(event) {
-  var senderID = event.sender.id
-  var recipientID = event.recipient.id
-  var timeOfPostback = event.timestamp
-
-  var payload = event.postback.payload
-
-  console.log("Received postback for user %d and page %d with payload '%s' " +
-    "at %d", senderID, recipientID, payload, timeOfPostback)
-
-  sendMessageToAgent(senderID, "Postback called")
 }
 
 app.listen(80)
