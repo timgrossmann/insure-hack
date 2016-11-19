@@ -8,6 +8,18 @@ function send ({clientId, agentId, message}) {
   })
 }
 
+function requestAccountNumber ({clientId, agentId}) {
+  send({clientId, agentId, message: '--authenticate'})
+}
+
+function offerInsurance ({clientId, agentId}) {
+  console.log('offer dog insurance');
+
+  send({clientId, agentId, message: '--doginsurance'})
+}
+
 export default {
-  send
+  send,
+  offerInsurance,
+  requestAccountNumber
 }

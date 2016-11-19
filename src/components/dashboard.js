@@ -39,8 +39,6 @@ export default class Dashboard extends Component {
     db.chat.on('value', (response) => {
       const chats = response.val();
 
-      console.log(chats);
-
       this.setState({
         ownChats: _.pickBy(chats, (chat) => chat.assignedAdviser === ASSIGNED_ADVISER_ID),
         unassignedChats: _.pickBy(chats, (chat) => chat.assignedAdviser == null)
@@ -85,12 +83,26 @@ export default class Dashboard extends Component {
         }
       }));
     }
-
+  
     messenger.send({
       agentId: ASSIGNED_ADVISER_ID,
       clientId: this.state.selectedChatId,
       message
     })
+  }
+
+  requestAccountNumber () {
+    messenger.requestAccountNumber({
+      agentId: ASSIGNED_ADVISER_ID,
+      clientId: this.state.selectedChatId
+    });
+  }
+
+  offerInsurance () {
+    messenger.offerInsurance({
+      agentId: ASSIGNED_ADVISER_ID,
+      clientId: this.state.selectedChatId
+    });
   }
 
   render () {
@@ -105,8 +117,6 @@ export default class Dashboard extends Component {
         />
 
         <div className='MainContent' style={cardStyle}>
-
-
           <div className='ChatListSidebar'>
 
             <Tabs value={ selectedTab }>
@@ -133,7 +143,9 @@ export default class Dashboard extends Component {
             <Chat chat={selectedChat}
                   currentUser={{ id : ASSIGNED_ADVISER_ID}}
                   onMessage={(message) => this.sendMessage(message)}
-                  onOpenInfo={() => this.showInfo()}/>
+                  onOpenInfo={() => this.showInfo()}
+                  onOfferInsurance={() => this.offerInsurance() }
+                  onRequestAccountNumber={() => this.requestAccountNumber() }/>
           </div>
           { showInfo && selectedChat ? <PersonInfo onClose={() => { this.hideInfo() }} chat={selectedChat} /> : '' }
         </div>
