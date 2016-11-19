@@ -67,8 +67,17 @@ function Message ({ message, currentUser, name }) {
   const type = message.sender === currentUser.id ? 'send' : 'received';
 
   if (type === 'received') {
-    nameHTML = <div className='Message__name'>name</div>;
+
+
+    if (message.sender === '925728457561572') {
+      nameHTML =  <div className='Message__name'>Bot</div>;
+
+    } else {
+      nameHTML = <div className='Message__name'>{name}</div>;
+    }
   }
+
+
 
   return (
     <div className={'Message Message--' + type}>

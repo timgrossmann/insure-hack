@@ -18,7 +18,6 @@ export default class ChatList extends Component {
         lastText = lastMessage.value;
       }
 
-
       return (
         <ListItem
           key={chat.id}
