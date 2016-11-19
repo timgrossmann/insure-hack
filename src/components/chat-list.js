@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
-import { List, ListItem } from 'material-ui/List';
+import { List, ListItem, makeSelectable } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 
 
@@ -8,19 +8,30 @@ export default class ChatList extends Component {
   render () {
     const { chats, selectedChat, onSelect } = this.props;
 
-    const chatListHTML = _.map(chats, (chat, i) => (
-      <ListItem
-        key={chat.id}
-        primaryText={chat.name}
-        secondaryText={_.last(chat.messages).value}
-        secondaryTextLines={1}
-        onClick={() => this.onSelect(chat) }
-      />
-    ));
+
+    const chatListHTML = _.map(chats, (chat) => {
+      let lastText = '';
+      const lastMessage = _(chat.messages).values().last();
+
+
+      if (lastMessage) {
+        lastText = lastMessage.value;
+      }
+
+
+      return (
+        <ListItem
+          key={chat.id}
+          primaryText={chat.name}
+          secondaryText={lastText}
+          secondaryTextLines={1}
+          onClick={() => onSelect(chat) }/>
+      )
+    });
 
     return (
       <div>
-        <List>
+        <List value={0}>
           {chatListHTML}
         </List>
       </div>

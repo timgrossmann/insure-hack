@@ -1,6 +1,7 @@
 /* apply a natural box layout model to all elements, but allowing components to change */
 html {
   box-sizing: border-box;
+  font-family: Roboto, sans-serif;
 }
 *, *:before, *:after {
   box-sizing: inherit;
@@ -11,20 +12,82 @@ html, body {
 }
 
 .MainContent {
-  max-width: 1200px;
-  margin: 50px auto 0 auto;
   display: flex;
   flex-direction: row;
-  min-height: 300px;
+  min-height:400px;
+  align-items: stretch;
 }
 
 .ChatListSidebar {
-  width: 350px;
-  height: 100%;
+  display: block;
+  width: 500px;
   border-right: 1px solid #e2e2e2;
 }
 
 .ChatContent {
-  height: 100%;
+  display:block;
+  height: 400px;
   width: 100%;
+  position: relative;
 }
+
+.ChatContent__Toolbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+}
+
+.ChatContent__Input {
+  width: 100%;
+  height: 36px;
+  font-size: 14px;
+  padding-left: 10px;
+}
+
+.Message--send {
+  text-align: right;
+}
+
+.Message--received {
+ text-align: left;
+}
+
+.Message {
+  margin: 16px;
+}
+
+.Message__inner {
+  display: inline-block;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.Message__name {
+  font-color: #91959d;
+}
+
+.Message--received .Message__inner {
+  background: #f1f0f0;
+}
+
+.Message--send .Message__inner {
+  background: #00bcd4;
+}
+
+.SubHeader {
+  height: 48px;
+  background: #00bcd4;
+  display: flex;
+  align-items: center;
+  padding: 0 48px;
+}
+
+.SubHeader h1 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: normal;
+  margin: 0;
+}
+
