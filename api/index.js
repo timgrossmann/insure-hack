@@ -19,6 +19,19 @@ app.use(bodyParser.json())
 
 SERVER_ID = '925728457561572'
 needAuth = {}
+dogQuest = {}
+questionsStarted = {}
+
+/*
+dogQuest = {
+  clientId: {
+    questionNum: 2,
+    answers: {
+      1: 'pitbull'
+    }
+  }
+}
+* */
 
 
 app.get('/webhook', function(req, res) {
@@ -42,7 +55,20 @@ app.post('/agent', function (req, res) {
 
   //console.log(clientId, agentId, message)
 
-  sendMessageToClient(clientId, agentId, message)
+  switch (message) {
+    case '--authenticate':
+      needAuth[clientId] = true
+      sendAuthenticationRequest(clientId)
+      break
+    case '--doginsurance':
+      dogQuest[clientId] = { questionNum: 1, answers: {}}
+      sendInsuranceQuestion(clientId, 'What is the dogs race ?')
+      questionsStarted[clientId] = true
+      break
+    default:
+      sendMessageToClient(clientId, agentId, message)
+  }
+
   res.end()
 })
 
@@ -85,26 +111,58 @@ function receivedMessage(event) {
   var messageText = message.text
   var messageAttachments = message.attachments
 
-  if (!/^\d+$/.test(senderID)) {
-    switch (messageText) {
-      case 'authenticate':
-        needAuth[recipientID] = true
-        sendAuthenticationRequest(recipientID)
-        break
-    }
-  } else if (senderID !== SERVER_ID) {
+  if (senderID !== SERVER_ID) {
     if (messageText) {
 
       updateMessages(senderID, senderID, timeOfMessage, messageText)
 
       if (needAuth[senderID]) {
-       if(/[0-9]{3}-[0-9]{2}-[0-9]{4}/.test(messageText)) {
-         sendMessageToClient(senderID, senderID, 'Thank you!\nYou have succefully authenticated')
+       if(/[0-9]{11}/.test(messageText)) {
+         sendMessageToClient(senderID, recipientID, 'Thank you!\nYou have succefully authenticated')
          needAuth[senderID] = false
+         addInsuranceIdToClient(senderID, messageText)
+
        } else if (messageText === 'Call me to verify') {
-         sendMessageToClient(senderID, senderID, 'Sure, I will call you soon.')
+         sendMessageToClient(senderID, recipientID, 'I am sorry, i have no free timeslots today.')
          needAuth[senderID] = false
        }
+      } else if (questionsStarted[senderID]) {
+
+        console.log(questionsStarted[senderID], dogQuest[senderID].questionNum)
+
+        switch(dogQuest[senderID].questionNum) {
+          case 1:
+            if (messageText.indexOf('?') === -1 && messageText.split(' ').length === 1) {
+              dogQuest[senderID].questionNum += 1
+              dogQuest[senderID].answers[1] = messageText
+              sendInsuranceQuestion(senderID, 'What is his chipnumber ?\n(You can find it in his idcard)')
+            } else {
+              sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
+            }
+            break
+          case 2:
+            console.log('case 2 outer')
+            if (messageText.indexOf('?') === -1 && messageText.length === 3) {
+              console.log('case 2 inner')
+              dogQuest[senderID].questionNum += 1
+              dogQuest[senderID].answers[2] = messageText
+              sendInsuranceQuestionReplies(senderID, 'Is it a compulsory insurance ?\n(yes/no)')
+            } else {
+              sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
+            }
+            break
+          case 3:
+            console.log('3. case outer')
+            if (messageText.indexOf('?') === -1 && (messageText === 'yes' || messageText === 'no')) {
+              console.log('3. case inner')
+              dogQuest[senderID].answers[3] = messageText
+              sendMessageToClient(senderID, recipientID, 'Thank you!\nYour offer is being created')
+              sendOfferToClient(senderID, recipientID)
+              questionsStarted[senderID] = false
+            } else {
+              sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
+            }
+        }
       } else {
         switch (messageText) {
           case 'buttons':
@@ -116,16 +174,49 @@ function receivedMessage(event) {
           case 'generic':
             sendGenericMessage(senderID)
             break
-          case 'authenticate':
-            needAuth[senderID] = true
-            sendAuthenticationRequest(senderID)
-            break
           default:
             break
         }
       }
     }
   }
+}
+
+function sendOfferToClient (clientId, agentId) {
+  var messageData = {
+    recipient: {
+      id: clientId
+    },
+    sender: {
+      id: agentId
+    },
+    message: {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "generic",
+          elements: [{
+            title: "Dog Insurance",
+            subtitle: "Your personal special insurhack offer.",
+            item_url: "https://www.zurich.com",
+            image_url: "http://www.smartinvestor.com.my/wp-content/uploads/zurich-logo.jpg",
+            buttons: [{
+              type: "web_url",
+              url: "https://www.zurich.com",
+              title: "Check out the offer"
+            }],
+          }]
+        }
+      }
+    }
+  }
+
+  callSendAPI(messageData)
+}
+
+function addInsuranceIdToClient (clientId, insuranceId) {
+  var chat = firebase.database().ref('chat/' + clientId + '/insuranceId')
+  chat.set(insuranceId)
 }
 
 function updateMessages (clientId, sender, timestamp, message) {
@@ -144,7 +235,7 @@ function updateMessages (clientId, sender, timestamp, message) {
 
     } else {
       addUser(clientId, message, timestamp)
-      sendMessageToAgent(clientId, 'Your Agent was informed.\n\ You will receive a response very soon.')
+      sendMessageToAgent(clientId, 'Your Agent was informed.\n\You will receive a response very soon.')
     }
   })
 }
@@ -187,6 +278,49 @@ function addUser (clientId, message, timestamp) {
   })
 }
 
+function sendInsuranceQuestionReplies (clientId, message) {
+  console.log('Questions started')
+
+  var messageData = {
+    "recipient": {
+      "id": clientId
+    },
+    message: {
+      text: message,
+      quick_replies: [
+        {
+          content_type: "text",
+          title: "yes",
+          payload: "yes_to_insurance"
+        },
+        {
+          content_type: "text",
+          title: "no",
+          payload: "no_to_insurance"
+        }
+      ]
+    }
+  }
+
+  callSendAPI(messageData)
+}
+
+function sendInsuranceQuestion (clientId, message) {
+  console.log('Questions started')
+
+  var messageData = {
+    "recipient": {
+      "id": clientId
+    },
+    message: {
+      text: message,
+    }
+  }
+
+  callSendAPI(messageData)
+}
+
+
 function sendAuthenticationRequest (recipientId) {
   console.log('Asked for authentification required')
 
@@ -195,7 +329,8 @@ function sendAuthenticationRequest (recipientId) {
       "id": recipientId
     },
     message: {
-      text: "Please verify your insurance social security number.\nEither send it per Messenger or tell me to call you.",
+      text: "Please verify your insurance social security number.\nEither send it per Messenger or tell me to call you.\n\n" +
+      "You can find it on your insurance car.",
       quick_replies: [
         {
           content_type: "text",
@@ -310,9 +445,9 @@ function sendMessageToClient(recipientId, agentId, messageText) {
   console.log('Answer from Agent: ', messageText)
 
   updateMessages(recipientId, agentId, Date.now(), messageText)
-  if (agentId !== SERVER_ID) {
+  //if (agentId !== SERVER_ID) {
     callSendAPI(messageData)
-  }
+  //}
 }
 
 function sendMessageToAgent(agentId, messageText) {
