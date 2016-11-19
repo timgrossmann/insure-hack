@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "webpack",
-    "publish": "cd build && git init && git add -A && git commit --amend -m 'Release' && git push --force && cd .."
+    "api": "json-server --watch db.json --port 3001"
   },
   "repository": {
     "type": "git",
