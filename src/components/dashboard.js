@@ -5,6 +5,7 @@ import { Tabs, Tab } from 'material-ui/Tabs';
 import { Card } from 'material-ui/Card';
 import ChatList from './chat-list';
 import Chat from './chat';
+import messenger from '../utils/messenger';
 
 import db from '../utils/db';
 
@@ -26,21 +27,20 @@ export default class Dashboard extends Component {
     super(props, context);
 
     this.state = {
-      selectedChat: null,
+      selectedChatId: null,
       selectedTab: 'own',
       ownChats: [],
       unassignedChats: []
     };
 
     db.chat.on('value', (response) => {
-      const chats = _.values(response.val());
+      const chats = response.val();
 
       console.log(chats);
 
-
       this.setState({
-        ownChats: _.filter(chats, (chat) => chat.assignedAdviser === ASSIGNED_ADVISER_ID),
-        unassignedChats: _.filter(chats, (chat) => chat.assignedAdviser == null)
+        ownChats: _.pickBy(chats, (chat) => chat.assignedAdviser === ASSIGNED_ADVISER_ID),
+        unassignedChats: _.pickBy(chats, (chat) => chat.assignedAdviser == null)
       });
     });
   }
@@ -50,11 +50,26 @@ export default class Dashboard extends Component {
   }
 
   selectChat (chat) {
-    this.setState({ selectedChat: chat });
+    this.setState({ selectedChatId: chat.id });
+  }
+
+  sendMessage (message) {
+
+
+    this.setState({
+
+    })
+
+    messenger.send({
+      agentId: ASSIGNED_ADVISER_ID,
+      clientId: this.state.selectedChatId,
+      message
+    })
   }
 
   render () {
-    const { selectedTab, selectedChat, ownChats, unassignedChats } = this.state;
+    const { selectedTab, selectedChatId, ownChats, unassignedChats } = this.state;
+    const selectedChat = ownChats[selectedChatId] || unassignedChats[selectedChatId];
 
     return (
       <div>
@@ -91,7 +106,7 @@ export default class Dashboard extends Component {
           <div className='ChatContent'>
             <Chat chat={selectedChat}
                   currentUser={{ id : ASSIGNED_ADVISER_ID}}
-                  onMessage={(message) => console.log(message)}/>
+                  onMessage={(message) => this.sendMessage(message)} />
           </div>
 
         </div>

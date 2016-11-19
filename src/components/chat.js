@@ -18,7 +18,6 @@ export default class Chat extends Component {
     if (this.state.message) {
       this.props.onMessage(this.state.message);
       this.setState({ message: '' });
-
     }
   }
 
@@ -29,9 +28,14 @@ export default class Chat extends Component {
       return <div/>;
     }
 
-    const messagesHTML = _.map(chat.messages, (message, id) => {
-      return <Message key={id} message={message} currentUser={currentUser} name={chat.name}/>
-    });
+    const messagesHTML = _(chat.messages)
+      .values()
+      .sortBy((message) => message.timestamp)
+      .map((message, i) => {
+        return <Message key={i} message={message} currentUser={currentUser} name={chat.name}/>
+      })
+      .value();
+
 
     return <div>
       <div className='SubHeader'>
@@ -67,9 +71,8 @@ function Message ({ message, currentUser, name }) {
 
   if (type === 'received') {
 
-
     if (message.sender === '925728457561572') {
-      nameHTML =  <div className='Message__name'>Bot</div>;
+      nameHTML = <div className='Message__name'>Bot</div>;
 
     } else {
       nameHTML = <div className='Message__name'>{name}</div>;
