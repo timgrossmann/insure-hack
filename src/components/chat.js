@@ -39,7 +39,7 @@ export default class Chat extends Component {
   render () {
     const {
       chat, currentUser,
-      onOpenInfo, onRequestAccountNumber, onOfferInsurance
+      onOpenInfo, onRequestAccountNumber, onOfferInsurance, onAssignClient
     } = this.props;
 
     if (!_.isObject(chat)) {
@@ -60,7 +60,8 @@ export default class Chat extends Component {
         <h1>{chat.name}</h1>
         <Menu onOpenInfo={onOpenInfo}
               onRequestAccountNumber={onRequestAccountNumber}
-              onOfferInsurance={onOfferInsurance}/>
+              onOfferInsurance={onOfferInsurance}
+              onAssignClient={onAssignClient}/>
       </div>
 
       <div className='Messages' ref={(el) => this.$messagesContainer = $(el)}>
@@ -112,12 +113,12 @@ function Message ({ message, currentUser, name }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function Menu ({
   isAssigned,
-  onOpenInfo, onRequestAccountNumber, onOfferInsurance
+  onOpenInfo, onRequestAccountNumber, onOfferInsurance, onAssignClient
 }) {
   return (
     <IconMenu
@@ -128,7 +129,7 @@ function Menu ({
       <MenuItem primaryText="Customer Details" onClick={onOpenInfo}/>
       <MenuItem primaryText="Request account number" onClick={() => onRequestAccountNumber()}/>
       <MenuItem primaryText="Offer insurance" onClick={onOfferInsurance}/>
-      {!isAssigned ? <MenuItem primaryText="Assign to my clients"/> : '' }
+      {!isAssigned ? <MenuItem primaryText="Assign to my clients" onClick={onAssignClient}/> : '' }
     </IconMenu>
   );
 }

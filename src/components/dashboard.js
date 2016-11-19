@@ -83,7 +83,7 @@ export default class Dashboard extends Component {
         }
       }));
     }
-  
+
     messenger.send({
       agentId: ASSIGNED_ADVISER_ID,
       clientId: this.state.selectedChatId,
@@ -102,6 +102,14 @@ export default class Dashboard extends Component {
     messenger.offerInsurance({
       agentId: ASSIGNED_ADVISER_ID,
       clientId: this.state.selectedChatId
+    });
+  }
+
+  assignClient () {
+    db.chat.child(`${this.state.selectedChatId}/assignedAdviser`).set(ASSIGNED_ADVISER_ID);
+
+    this.setState({
+      selectedTab: 'own'
     });
   }
 
@@ -144,8 +152,10 @@ export default class Dashboard extends Component {
                   currentUser={{ id : ASSIGNED_ADVISER_ID}}
                   onMessage={(message) => this.sendMessage(message)}
                   onOpenInfo={() => this.showInfo()}
+                  onAssignClient={() => this.assignClient()}
                   onOfferInsurance={() => this.offerInsurance() }
-                  onRequestAccountNumber={() => this.requestAccountNumber() }/>
+                  onRequestAccountNumber={() => this.requestAccountNumber() }
+                  onAssignAs/>
           </div>
           { showInfo && selectedChat ? <PersonInfo onClose={() => { this.hideInfo() }} chat={selectedChat} /> : '' }
         </div>
