@@ -1,10 +1,12 @@
 import _ from 'lodash';
+import update from 'immutability-helper';
 import React, { Component } from 'react';
 import AppBar from 'material-ui/AppBar';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import { Card } from 'material-ui/Card';
 import ChatList from './chat-list';
 import Chat from './chat';
+import PersonInfo from './person-info';
 import messenger from '../utils/messenger';
 
 import db from '../utils/db';
@@ -29,8 +31,9 @@ export default class Dashboard extends Component {
     this.state = {
       selectedChatId: null,
       selectedTab: 'own',
-      ownChats: [],
-      unassignedChats: []
+      ownChats: {},
+      unassignedChats: {},
+      showInfo: true
     };
 
     db.chat.on('value', (response) => {
@@ -45,6 +48,14 @@ export default class Dashboard extends Component {
     });
   }
 
+  hideInfo () {
+    this.setState({ showInfo: false });
+  }
+
+  showInfo () {
+    this.setState({ showInfo: true });
+  }
+
   selectTab (tab) {
     this.setState({ selectedTab: tab });
   }
@@ -54,11 +65,26 @@ export default class Dashboard extends Component {
   }
 
   sendMessage (message) {
+    const newMessage = {
+      sender: ASSIGNED_ADVISER_ID,
+      value: message,
+      timestamp: Date.now()
+    };
 
+    if (this.state.ownChats[this.state.selectedChatId]) {
+      this.setState(update(this.state, {
+        ownChats: {
+          [this.state.selectedChatId] : { messages : { [Math.random] : { $set : newMessage } } }
+        }
+      }));
 
-    this.setState({
-
-    })
+    } else if (this.state.unassignedChats[this.state.selectedChatId]) {
+      this.setState(update(this.state, {
+        unassignedChats: {
+          [this.state.selectedChatId] : { messages : { [Math.random] : { $set : newMessage } } }
+        }
+      }));
+    }
 
     messenger.send({
       agentId: ASSIGNED_ADVISER_ID,
@@ -68,7 +94,7 @@ export default class Dashboard extends Component {
   }
 
   render () {
-    const { selectedTab, selectedChatId, ownChats, unassignedChats } = this.state;
+    const { selectedTab, selectedChatId, ownChats, unassignedChats, showInfo } = this.state;
     const selectedChat = ownChats[selectedChatId] || unassignedChats[selectedChatId];
 
     return (
@@ -93,7 +119,7 @@ export default class Dashboard extends Component {
                   />
                 </div>
               </Tab>
-              <Tab label="Unassigned Clients" value='unassigned' onClick={() => this.selectTab('unassigned')}>
+              <Tab label="Others" value='unassigned' onClick={() => this.selectTab('unassigned')}>
                 <ChatList
                   chats={unassignedChats}
                   selectedChat={selectedChat}
@@ -106,9 +132,10 @@ export default class Dashboard extends Component {
           <div className='ChatContent'>
             <Chat chat={selectedChat}
                   currentUser={{ id : ASSIGNED_ADVISER_ID}}
-                  onMessage={(message) => this.sendMessage(message)} />
+                  onMessage={(message) => this.sendMessage(message)}
+                  onOpenInfo={() => this.showInfo()}/>
           </div>
-
+          { showInfo && selectedChat ? <PersonInfo onClose={() => { this.hideInfo() }} chat={selectedChat} /> : '' }
         </div>
       </div>
     )

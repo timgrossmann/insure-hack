@@ -21,6 +21,7 @@ export default class ChatList extends Component {
       return (
         <ListItem
           key={chat.id}
+          leftAvatar={<img src={chat.img} widt='48' height='48' className='round'/>}
           primaryText={chat.name}
           secondaryText={lastText}
           secondaryTextLines={1}
