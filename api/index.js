@@ -97,9 +97,14 @@ function receivedMessage(event) {
 
       updateMessages(senderID, senderID, timeOfMessage, messageText)
 
-      if (needAuth[senderID] && /[0-9]{3}-[0-9]{2}-[0-9]{4}/.test(messageText)) {
-        sendMessageToClient(senderID, senderID, 'Thank you!\nYou have succefully authenticated')
-        needAuth[recipientID] = false
+      if (needAuth[senderID]) {
+       if(/[0-9]{3}-[0-9]{2}-[0-9]{4}/.test(messageText)) {
+         sendMessageToClient(senderID, senderID, 'Thank you!\nYou have succefully authenticated')
+         needAuth[senderID] = false
+       } else if (messageText === 'Call me to verify') {
+         sendMessageToClient(senderID, senderID, 'Sure, I will call you soon.')
+         needAuth[senderID] = false
+       }
       } else {
         switch (messageText) {
           case 'buttons':
