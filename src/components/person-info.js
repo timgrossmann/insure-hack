@@ -175,12 +175,12 @@ function formatStatus (status) {
 
 function formatPolicyLine (policyLine) {
   return ({
-      UNLine: 'accident insurance',
-      GEBLine: '',
-      RSLine: '',
-      MSLine: 'mobile protection',
-      HALine: '',
-      HRLine: ''
+      UNLineExists: 'accident insurance',
+      GEBLineExists: 'building insurance',
+      RSLineExists: 'legal protection',
+      MSLineExists: 'mobile protection',
+      HALineExists: 'general liability',
+      HRLineExists: 'home contents insurance'
     }[policyLine]) || policyLine.substring(0, policyLine.length - 6);
 }
 

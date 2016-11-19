@@ -61,7 +61,8 @@ export default class Chat extends Component {
         <Menu onOpenInfo={onOpenInfo}
               onRequestAccountNumber={onRequestAccountNumber}
               onOfferInsurance={onOfferInsurance}
-              onAssignClient={onAssignClient}/>
+              onAssignClient={onAssignClient}
+              isAssigned={chat.assignedAdviser}/>
       </div>
 
       <div className='Messages' ref={(el) => this.$messagesContainer = $(el)}>
