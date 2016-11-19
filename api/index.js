@@ -1,10 +1,19 @@
-var express = require('express')
 var bodyParser = require("body-parser")
-var request = require('request')
-
+var express = require('express')
 var firebase = require('./firebase')()
-
+var request = require('request')
 var app = express()
+
+//CORS middleware
+var allowCrossDomain = function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+
+  next();
+}
+
+app.use(allowCrossDomain);
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
 
@@ -27,8 +36,11 @@ app.post('/agent', function (req, res) {
 
   var message = data.message
   var clientId = data.clientId
+  var agentId = data.agentId
 
-  sendMessageToClient(clientId, message)
+  //console.log(clientId, agentId, message)
+
+  sendMessageToClient(clientId, agentId, message)
   res.end()
 })
 
@@ -61,7 +73,7 @@ app.post('/webhook', function (req, res) {
 function receivedMessage(event) {
   var senderID = event.sender.id
   var recipientID = event.recipient.id
-  var timeOfMessage = new Date().toISOString()
+  var timeOfMessage = Date.now()
   var message = event.message
 
   //console.log(senderID, recipientID)
@@ -71,9 +83,9 @@ function receivedMessage(event) {
   var messageText = message.text
   var messageAttachments = message.attachments
 
-  if (senderID === SERVER_ID) {
-    updateMessages(recipientID, senderID, timeOfMessage, messageText)
-  } else {
+  //console.log(senderID, recipientID)
+
+  if (senderID !== SERVER_ID) {
     if (messageText) {
 
       updateMessages(senderID, senderID, timeOfMessage, messageText)
@@ -89,7 +101,7 @@ function receivedMessage(event) {
           sendGenericMessage(senderID)
           break
         default:
-          sendMessageToAgent(senderID, messageText)
+          sendMessageToAgent(senderID, recipientID, messageText)
       }
     } else if (messageAttachments) {
       sendTextMessage(senderID, "Message with attachment received")
@@ -101,7 +113,7 @@ function updateMessages (clientId, sender, timestamp, message) {
 
   checkForUser(clientId).then(function (result) {
     if (result) {
-      chat = firebase.database().ref('chat/' + clientId)
+      firebase.database().ref('chat/' + clientId)
       var newMessage = {
         sender: sender,
         value: message,
@@ -109,7 +121,7 @@ function updateMessages (clientId, sender, timestamp, message) {
       }
 
       firebase.database().ref('chat/' + clientId + '/messages').push(newMessage)
-      console.log(message, 'added')
+      //console.log(message, 'added')
 
     } else {
       addUser(clientId, message, timestamp)
@@ -118,7 +130,7 @@ function updateMessages (clientId, sender, timestamp, message) {
 }
 
 function checkForUser (clientId) {
-  chat = firebase.database().ref('chat/' + clientId)
+  const chat = firebase.database().ref('chat/' + clientId)
   return chat.once('value').then(function (snapshot) {
     if (snapshot.val()) {
       return true
@@ -129,26 +141,28 @@ function checkForUser (clientId) {
 }
 
 function addUser (clientId, message, timestamp) {
-  chat = firebase.database().ref('chat/' + clientId)
+  const chat = firebase.database().ref('chat/' + clientId)
   chat.once('value').then(function (snapshot) {
 
-    var userData = {
-      id: clientId,
-      name: 'test',
-      assingedAdviser: null,
-      value: {},
-    }
+    getUserInfo(clientId).then(function (result) {
+      var userData = {
+        id: clientId,
+        name: result,
+        assingedAdviser: null,
+        value: {},
+      }
 
-    var newMessage = {
-      'sender': clientId,
-      'value': message,
-      'timestamp': new Date().toISOString()
-    }
+      var newMessage = {
+        'sender': clientId,
+        'value': message,
+        'timestamp': Date.now()
+      }
 
-    chat.set(userData)
+      chat.set(userData)
 
-    firebase.database().ref('chat/' + clientId).child('/messages/').push(newMessage)
-    console.log('User added')
+      firebase.database().ref('chat/' + clientId).child('/messages/').push(newMessage)
+      console.log('User added')
+    })
   })
 }
 
@@ -237,10 +251,13 @@ function sendGenericMessage(recipientId) {
   callSendAPI(messageData)
 }
 
-function sendMessageToClient(recipientId, messageText) {
+function sendMessageToClient(recipientId, agentId, messageText) {
   var messageData = {
     recipient: {
       id: recipientId
+    },
+    sender: {
+      id: agentId
     },
     message: {
       text: messageText
@@ -249,20 +266,21 @@ function sendMessageToClient(recipientId, messageText) {
 
   console.log('Answer from Agent: ', messageText)
 
-  callSendAPI(messageData)
+  updateMessages(recipientId, agentId, Date.now(), messageText)
+  if (agentId !== SERVER_ID) {
+    callSendAPI(messageData)
+  }
 }
 
-function sendMessageToAgent(recipientId, messageText) {
+function sendMessageToAgent(agentId, messageText) {
   var messageData = {
     recipient: {
-      id: recipientId
+      id: agentId
     },
     message: {
       text: 'Your Agent was informed.\n\ You will receive a response very soon.'
     }
   }
-
-  //console.log('Agent contacted with Message: ', messageText)
 
   callSendAPI(messageData)
 }
@@ -279,13 +297,33 @@ function callSendAPI(messageData) {
       var recipientId = body.recipient_id
       var messageId = body.message_id
 
-      //console.log("Successfully sent generic message with id %s to recipient %s",
-        //messageId, recipientId)
     } else {
       console.error("Unable to send message.")
-      //console.error(response)
-      //console.error(error)
     }
+  })
+}
+
+function getUserInfo (userId) {
+  return new Promise(function (resolve, reject) {
+    request({
+      uri: 'https://graph.facebook.com/v2.6/' + userId,
+      qs: {
+        access_token: 'EAAZAQD7oFTL4BAMqRRK7uNA3TmEl2uDcfM4m8IuTvBlqGvm2NvtwLFp60CAWw9z50lsuJZBS7gwHbIUX7KcWhNoOp4jdE6y34UycE09pCdHBBVOSXwm67sOrSQVVtA0N0WcVly6q4f32ZBtsX0a2eaO0B6rJ9SXwhEnsfZAZC4QZDZD',
+        fields: 'first_name,last_name,profile_pic,locale,timezone,gender'},
+      method: 'GET'
+    }, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        var parsedBody = JSON.parse(body)
+
+        var firstName = parsedBody.first_name
+        var lastName = parsedBody.last_name
+
+        resolve(firstName + ' ' + lastName)
+      } else {
+        console.error("Unable to send message.")
+        resolve('unknown')
+      }
+    })
   })
 }
 
