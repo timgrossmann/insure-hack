@@ -1,10 +1,28 @@
 {
-  "adviser": [
-    { "id": 1, "name": "paul" },
-    { "id": 2, "name": "peter" }
-  ],
-
-  "message": [
-
+  "chat": [
+    {
+      "id": 3,
+      "name": "George",
+      "assignedAdviser": 1,
+      "messages": [
+        { "sender" : 1,  "value": "I need a car insurance!" },
+        { "sender" : 1, "value": "We have a great offering for that" }
+      ]
+    }, {
+      "id": 4,
+      "name": "Sandra",
+      "assignedAdviser": null,
+      "messages": [
+        { "sender" : 4,  "value": "I need a pet insurance!" }
+      ]
+    }, {
+      "id": 5,
+      "name": "Steve",
+      "assignedAdviser": 2,
+      "messages": [
+        { "sender" : 1,  "value": "I need an insurance!" },
+        { "sender" : 2, "value": "We have a great offering for that" }
+      ]
+    }
   ]
 }
