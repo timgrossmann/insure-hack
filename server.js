@@ -4,7 +4,6 @@ var config = require('./webpack.dev.config');
 
 new WebpackDevServer(webpack(config), {
   publicPath: config.output.publicPath,
-  hot: true,
   historyApiFallback: true
 }).listen(3000, function (err, result) {
   if (err) {
