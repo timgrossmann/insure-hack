@@ -18,12 +18,16 @@ html, body {
   align-items: stretch;
 }
 
-.ChatListSidebar {
+.MainSidebar {
   flex-shrink: 0;
   flex-grow: 0;
   display: block;
   width: 350px;
   border-right: 1px solid #e2e2e2;
+}
+
+.MainSidebar__content {
+  padding: 10px;
 }
 
 .ChatContent {
@@ -120,7 +124,6 @@ html, body {
   flex-grow: 0;
   width: 400px;
   height: 700px;
-
 }
 
 .PersonInfo__content {
@@ -173,6 +176,4 @@ html, body {
   background-position: left center;
   background-image: url('../assets/close-icon.svg');
 }
-
-
 
