@@ -18,6 +18,8 @@ app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
 
 SERVER_ID = '925728457561572'
+needAuth = {}
+
 
 app.get('/webhook', function(req, res) {
   if (req.query['hub.mode'] === 'subscribe' &&
@@ -83,28 +85,40 @@ function receivedMessage(event) {
   var messageText = message.text
   var messageAttachments = message.attachments
 
-  //console.log(senderID, recipientID)
-
-  if (senderID !== SERVER_ID) {
+  if (!/^\d+$/.test(senderID)) {
+    switch (messageText) {
+      case 'authenticate':
+        needAuth[recipientID] = true
+        sendAuthenticationRequest(recipientID)
+        break
+    }
+  } else if (senderID !== SERVER_ID) {
     if (messageText) {
 
       updateMessages(senderID, senderID, timeOfMessage, messageText)
 
-      switch (messageText) {
-        case 'buttons':
-          sendButtonSelection(senderID)
-          break
-        case 'help':
-          sendHelpMessage(senderID)
-          break
-        case 'generic':
-          sendGenericMessage(senderID)
-          break
-        default:
-          sendMessageToAgent(senderID, recipientID, messageText)
+      if (needAuth[senderID] && /[0-9]{3}-[0-9]{2}-[0-9]{4}/.test(messageText)) {
+        sendMessageToClient(senderID, senderID, 'Thank you!\nYou have succefully authenticated')
+        needAuth[recipientID] = false
+      } else {
+        switch (messageText) {
+          case 'buttons':
+            sendButtonSelection(senderID)
+            break
+          case 'help':
+            sendHelpMessage(senderID)
+            break
+          case 'generic':
+            sendGenericMessage(senderID)
+            break
+          case 'authenticate':
+            needAuth[senderID] = true
+            sendAuthenticationRequest(senderID)
+            break
+          default:
+            break
+        }
       }
-    } else if (messageAttachments) {
-      sendTextMessage(senderID, "Message with attachment received")
     }
   }
 }
@@ -125,6 +139,7 @@ function updateMessages (clientId, sender, timestamp, message) {
 
     } else {
       addUser(clientId, message, timestamp)
+      sendMessageToAgent(clientId, 'Your Agent was informed.\n\ You will receive a response very soon.')
     }
   })
 }
@@ -147,7 +162,8 @@ function addUser (clientId, message, timestamp) {
     getUserInfo(clientId).then(function (result) {
       var userData = {
         id: clientId,
-        name: result,
+        name: result.firstName + ' ' + result.lastName,
+        img: result.userImg,
         assingedAdviser: null,
         value: {},
       }
@@ -166,23 +182,45 @@ function addUser (clientId, message, timestamp) {
   })
 }
 
-function sendButtonSelection(recipientId) {
+function sendAuthenticationRequest (recipientId) {
+  console.log('Asked for authentification required')
+
   var messageData = {
     "recipient": {
       "id": recipientId
     },
-    "message": {
-      "text": "How many square Meters is your flat?:",
-      "quick_replies": [
+    message: {
+      text: "Please verify your insurance social security number.\nEither send it per Messenger or tell me to call you.",
+      quick_replies: [
         {
-          "content_type": "text",
-          "title": "20m^2",
-          "payload": "DEVELOPER_DEFINED_PAYLOAD_FOR_20"
+          content_type: "text",
+          title: "Call me to verify",
+          payload: "Call_client_by_phone"
+        }
+      ]
+      }
+    }
+
+  callSendAPI(messageData)
+}
+
+function sendButtonSelection(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: "How many square Meters is your flat?:",
+      quick_replies: [
+        {
+          content_type: "text",
+          title: "20m^2",
+          payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_20"
         },
         {
-          "content_type": "text",
-          "title": "40^2",
-          "payload": "DEVELOPER_DEFINED_PAYLOAD_FOR_40"
+          content_type: "text",
+          title: "40^2",
+          payload: "DEVELOPER_DEFINED_PAYLOAD_FOR_40"
         }
       ]
     }
@@ -278,7 +316,7 @@ function sendMessageToAgent(agentId, messageText) {
       id: agentId
     },
     message: {
-      text: 'Your Agent was informed.\n\ You will receive a response very soon.'
+      text: messageText
     }
   }
 
@@ -317,8 +355,9 @@ function getUserInfo (userId) {
 
         var firstName = parsedBody.first_name
         var lastName = parsedBody.last_name
+        var userImg = parsedBody.profile_pic
 
-        resolve(firstName + ' ' + lastName)
+        resolve({ firstName: firstName, lastName: lastName, userImg: userImg })
       } else {
         console.error("Unable to send message.")
         resolve('unknown')
