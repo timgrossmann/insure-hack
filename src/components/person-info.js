@@ -1,8 +1,9 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
-import FlatButton from 'material-ui/FlatButton';
 import CircularProgress from 'material-ui/CircularProgress';
 import { Card, CardActions, CardHeader, CardMedia, CardTitle, CardText } from 'material-ui/Card';
+import CloseIcon from 'material-ui/svg-icons/navigation/close';
+
 import Divider from 'material-ui/Divider';
 import zurich from '../utils/zurich';
 
@@ -61,13 +62,11 @@ export default class PersonInfo extends Component {
 
     return (
       <div className='PersonInfo'>
-
         <div className='SubHeader'>
           <h1>Customer Details</h1>
-          <FlatButton
-            style={{ color: '#fff' }}
-            label="close"
-            onClick={() => onClose()}/>
+
+          <CloseIcon color='#fff' onClick={onClose} style={{cursor: 'pointer'}}/>
+
         </div>
 
         <div className='PersonInfo__content'>
@@ -81,7 +80,6 @@ export default class PersonInfo extends Component {
 function InsuranceDetails ({ chat, customer }) {
   let details, policies;
   let name = chat.name;
-
 
   if (!customer) {
     details = <div className='centered'><CircularProgress /></div>;

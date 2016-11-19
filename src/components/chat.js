@@ -2,7 +2,6 @@ import $ from 'jquery';
 import _ from 'lodash';
 import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle } from 'material-ui/Toolbar';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
@@ -62,6 +61,7 @@ export default class Chat extends Component {
               onRequestAccountNumber={onRequestAccountNumber}
               onOfferInsurance={onOfferInsurance}
               onAssignClient={onAssignClient}
+              hasInsuranceId={chat.insuranceId}
               isAssigned={chat.assignedAdviser}/>
       </div>
 
@@ -118,7 +118,7 @@ function Message ({ message, currentUser, name }) {
 }
 
 function Menu ({
-  isAssigned,
+  isAssigned, hasInsuranceId,
   onOpenInfo, onRequestAccountNumber, onOfferInsurance, onAssignClient
 }) {
   return (
@@ -128,7 +128,7 @@ function Menu ({
       targetOrigin={{ horizontal: 'right', vertical: 'top' }}
     >
       <MenuItem primaryText="Customer Details" onClick={onOpenInfo}/>
-      <MenuItem primaryText="Request account number" onClick={() => onRequestAccountNumber()}/>
+      {!hasInsuranceId ? <MenuItem primaryText="Request account number" onClick={() => onRequestAccountNumber()}/>: ''}
       <MenuItem primaryText="Offer insurance" onClick={onOfferInsurance}/>
       {!isAssigned ? <MenuItem primaryText="Assign to my clients" onClick={onAssignClient}/> : '' }
     </IconMenu>

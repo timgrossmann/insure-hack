@@ -119,13 +119,14 @@ export default class Dashboard extends Component {
 
     return (
       <div>
-        <AppBar
-          title="Messages"
-          showMenuIconButton={false}
-        />
-
         <div className='MainContent' style={cardStyle}>
           <div className='ChatListSidebar'>
+
+            <div className='SubHeader'>
+              <h1>Frank Treck</h1>
+
+
+            </div>
 
             <Tabs value={ selectedTab }>
               <Tab label="My Clients" value='own' onClick={() => this.selectTab('own')}>
