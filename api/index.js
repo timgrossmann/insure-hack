@@ -25,7 +25,7 @@ questionsStarted = {}
 app.get('/webhook', function(req, res) {
   if (req.query['hub.mode'] === 'subscribe' &&
     req.query['hub.verify_token'] === 'token_for_the_test') {
-    console.log("Validating webhook")
+    //console.log("Validating webhook")
     res.status(200).send(req.query['hub.challenge'])
 
   } else {
@@ -97,14 +97,12 @@ function receivedMessage(event) {
   if (senderID !== SERVER_ID) {
     if (messageText) {
 
-      console.log(senderID, recipientID)
+      //console.log(senderID, recipientID)
 
       updateMessages(senderID, senderID, timeOfMessage, messageText)
 
       if (needAuth[senderID]) {
        if(/[0-9]{11}/.test(messageText)) {
-
-         console.log(senderID, recipientID)
 
          sendMessageToClient(senderID, recipientID, 'Thank you!\nYou have succefully authenticated')
          needAuth[senderID] = false
@@ -127,9 +125,7 @@ function receivedMessage(event) {
             }
             break
           case 2:
-            console.log('case 2 outer')
             if (messageText.indexOf('?') === -1 && messageText.length === 3) {
-              console.log('case 2 inner')
               dogQuest[senderID].questionNum += 1
               dogQuest[senderID].answers[2] = messageText
               sendInsuranceQuestionReplies(senderID, recipientID, 'Is it a compulsory insurance ?\n(yes/no)')
@@ -138,12 +134,10 @@ function receivedMessage(event) {
             }
             break
           case 3:
-            console.log('3. case outer')
             if (messageText.indexOf('?') === -1 && (messageText === 'yes' || messageText === 'no')) {
-              console.log('3. case inner')
               dogQuest[senderID].answers[3] = messageText
               sendMessageToClient(senderID, recipientID, 'Thank you!\nYour offer is being created')
-              //sendOfferToClient(senderID, recipientID)
+              sendOfferToClient(senderID, recipientID)
               questionsStarted[senderID] = false
             } else {
               sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
@@ -164,8 +158,20 @@ function receivedMessage(event) {
 
 function sendOfferToClient (clientId, agentId) {
 
-  getPrice().then(function (price) {
-    var title = "Dog Insurance nur " + price
+  getPrice(clientId).then(function (price) {
+    var subtitle = "Your personal special insurhack offer! Only " + price.yearly + "€/year or " + price.monthly + "€/month"
+
+    var secondMessageData = {
+      recipient: {
+        id: clientId
+      },
+      sender: {
+        id: agentId
+      },
+      message: {
+        text: subtitle
+      }
+    }
 
     var messageData = {
       recipient: {
@@ -180,8 +186,8 @@ function sendOfferToClient (clientId, agentId) {
           payload: {
             template_type: "generic",
             elements: [{
-              title: title,
-              subtitle: "Your personal special insurhack offer.",
+              title: 'Dog Insurance',
+              subtitle: subtitle,
               item_url: "https://www.zurich.com",
               image_url: "http://www.smartinvestor.com.my/wp-content/uploads/zurich-logo.jpg",
               buttons: [{
@@ -196,25 +202,38 @@ function sendOfferToClient (clientId, agentId) {
     }
 
     callSendAPI(messageData)
+
+    callSendAPI(secondMessageData)
   })
 }
 
-function getPrice() {
+function getPrice(clientId) {
   return new Promise(function (resolve, reject) {
 
+    var cAns = {1: 'pitbull', 2: '123', 3: 'yes'}
+
+    var token = '5974c270-a21b-3618-8056-3a2c0c0b8d31'
+    var requestBody = require('./requestBody')(cAns[1], cAns[2], cAns[3])
+
     request({
-      uri: 'https://graph.facebook.com/v2.6/me/messages',
-      qs: { access_token: 'EAAZAQD7oFTL4BAMqRRK7uNA3TmEl2uDcfM4m8IuTvBlqGvm2NvtwLFp60CAWw9z50lsuJZBS7gwHbIUX7KcWhNoOp4jdE6y34UycE09pCdHBBVOSXwm67sOrSQVVtA0N0WcVly6q4f32ZBtsX0a2eaO0B6rJ9SXwhEnsfZAZC4QZDZD' },
+      uri: 'https://api.insurhack.com/apis/gi/1//PolicyPeriod_Set/zde.actions.GetRating',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      },
+      json: requestBody,
       method: 'POST',
-      json: messageData
 
     }, function (error, response, body) {
-      if (!error && response.statusCode == 200) {
+      if (!error && response.statusCode == 201) {
         var recipientId = body.recipient_id
         var messageId = body.message_id
 
+        var yearlyPrice = body.CostsSummary.GrossPremium.Amount
+        var monthlyPrice = body.CostsSummary.GrossPremiumPerPaymentPeriod.Amount
+
+        resolve({ 'yearly': yearlyPrice, 'monthly': monthlyPrice })
       } else {
-        console.error("Unable to send message.")
+        console.error("Unable to send message.", error)
       }
     })
 
@@ -228,7 +247,7 @@ function addInsuranceIdToClient (clientId, insuranceId) {
 
 function updateMessages (clientId, sender, timestamp, message) {
 
-  console.log('updateMessage', clientId, sender)
+  //console.log('updateMessage', clientId, sender)
 
   checkForUser(clientId).then(function (result) {
     if (result) {
@@ -284,7 +303,7 @@ function addUser (clientId, sender, message, timestamp) {
         chat.set(userData)
 
         firebase.database().ref('chat/' + clientId).child('/messages/').push(newMessage)
-        console.log('User added')
+        //console.log('User added')
         resolve()
       })
     })
@@ -292,7 +311,7 @@ function addUser (clientId, sender, message, timestamp) {
 }
 
 function sendInsuranceQuestionReplies (clientId, agentId, message) {
-  console.log('Questions started')
+  //console.log('Questions started')
 
   var messageData = {
     "recipient": {
@@ -321,7 +340,7 @@ function sendInsuranceQuestionReplies (clientId, agentId, message) {
 }
 
 function sendInsuranceQuestion (clientId, agentId, message) {
-  console.log('Questions started')
+  //console.log('Questions started')
 
   var messageData = {
     "recipient": {
@@ -339,7 +358,7 @@ function sendInsuranceQuestion (clientId, agentId, message) {
 
 
 function sendAuthenticationRequest (recipientId, agentId, message) {
-  console.log('Asked for authentification required')
+  //console.log('Asked for authentification required')
 
   message = "Please verify your insurance social security number.\nEither send it per Messenger or tell me to call you.\n\n" +
     "You can find it on your insurance card."
@@ -395,7 +414,7 @@ function sendMessageToClient(recipientId, agentId, messageText) {
     }
   }
 
-  console.log('Answer from Agent: ', messageText)
+  //console.log('Answer from Agent: ', messageText)
 
   updateMessages(recipientId, agentId, Date.now(), messageText)
 

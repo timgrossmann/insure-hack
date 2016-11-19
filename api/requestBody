@@ -1,0 +1,53 @@
+module.exports = function (breed, chipNum, obligatory) {
+  return {"PolicyPeriod": {
+    "EffectiveDatedFields":    {
+      "RateType_ZDE": "tc_normal",
+        "TermType_ZDE": "tc_one_year"
+    },
+    "Policy":    {
+      "ProductCode": "NPLPL_NewPersonalProduct",
+        "Account":       {
+        "AccountNumber": "10000025114"
+      }
+    },
+    "HALine": {"CoverageParts_ZDE": [   {
+      "CoverageConcept": "tc_silver",
+      "Subline": "tc_ha_thv",
+      "ScheduleCoverages": [      {
+        "PatternCode": "HA_THVDogCov",
+        "Pattern": {"PublicID": "HA_THVDogCov"},
+        "ScheduledItems": [
+          {
+            "ScheduledItemColumns": [
+              {
+                "Name": "ChipNo_Scheditem",
+                "ValueAsString": chipNum,
+                "ODataCustomRemove": null
+              },
+              {
+                "Name": "InsuranceOligation_SchedItem",
+                "ValueAsString": obligatory === "yes" ? "true" : "false",
+                "ODataCustomRemove": null
+              },
+              {
+                "Name": "Race_SchedItem",
+                "ValueAsString": breed,
+                "ODataCustomRemove": null
+              }
+            ],
+            "PolicyLocation": {
+              "AddressLine1": "Hauptstraße",
+              "City" : "Koeln",
+              "Country": "tc_DE",
+              "PostalCode": "55575",
+              "HouseNumber_ZDE": "4"
+            }
+          }
+        ]
+      }],
+      "@odata.type": "#zde.entities.GLTHVCovPart_ZDE"
+    }]},
+    "PolicyStartDate": "2016-11-07"
+  }
+  }
+}
