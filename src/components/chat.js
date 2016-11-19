@@ -1,6 +1,8 @@
+import $ from 'jquery';
 import _ from 'lodash';
 import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
+import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle } from 'material-ui/Toolbar';
 
 
@@ -21,8 +23,21 @@ export default class Chat extends Component {
     }
   }
 
+  componentDidUpdate (prevProps) {
+
+    if (this.props.chat && (!prevProps.chat ||  _.size(this.props.chat.messages) !== _.size(prevProps.chat.messages))) {
+      this.$messagesContainer.animate({
+        scrollTop: _.reduce(this.$messagesContainer.children().get(), (sum, child) => {
+
+          return sum + $(child).height() + 5
+
+        }, 0)
+      })
+    }
+  }
+
   render () {
-    const { chat, currentUser } = this.props;
+    const { chat, currentUser, onOpenInfo } = this.props;
 
     if (!_.isObject(chat)) {
       return <div/>;
@@ -39,13 +54,12 @@ export default class Chat extends Component {
 
     return <div>
       <div className='SubHeader'>
-        <h1>{chat.name}</h1>
+        <FlatButton style={{color: '#fff'}} label={chat.name} onClick={() => onOpenInfo()}/>
       </div>
 
-      <div className='Messages'>
+      <div className='Messages' ref={(el) => this.$messagesContainer = $(el)}>
         {messagesHTML}
       </div>
-
 
       <form onSubmit={(e) => {
         e.preventDefault();
@@ -69,14 +83,15 @@ function Message ({ message, currentUser, name }) {
   let nameHTML;
   const type = message.sender === currentUser.id ? 'send' : 'received';
 
-  if (type === 'received') {
 
-    if (message.sender === '925728457561572') {
-      nameHTML = <div className='Message__name'>Bot</div>;
 
-    } else {
-      nameHTML = <div className='Message__name'>{name}</div>;
-    }
+  if (message.sender === currentUser.id) {
+    nameHTML = <div className='Message__name'>Me</div>;
+  } else if (message.sender === '925728457561572') {
+    nameHTML = <div className='Message__name'>Bot</div>;
+
+  } else {
+    nameHTML = <div className='Message__name'>{name}</div>;
   }
 
 
