@@ -1,28 +1,45 @@
 {
-  "chat": [
-    {
-      "id": 3,
+  "chat": {
+    "user_3": {
+      "id": "user_3",
       "name": "George",
-      "assignedAdviser": 1,
+      "assignedAdviser": "user_1",
       "messages": [
-        { "sender" : 1,  "value": "I need a car insurance!" },
-        { "sender" : 1, "value": "We have a great offering for that" }
+        {
+          "sender": "user_3",
+          "value": "I need a car insurance!"
+        },
+        {
+          "sender": "user_1",
+          "value": "We have a great offering for that"
+        }
       ]
-    }, {
-      "id": 4,
+    },
+    "user_4": {
+      "id": "user_4",
       "name": "Sandra",
       "assignedAdviser": null,
       "messages": [
-        { "sender" : 4,  "value": "I need a pet insurance!" }
+        {
+          "sender": "user_4",
+          "value": "I need a pet insurance!"
+        }
       ]
-    }, {
-      "id": 5,
+    },
+    "user_5": {
+      "id": "user_5",
       "name": "Steve",
-      "assignedAdviser": 2,
+      "assignedAdviser": "user_2",
       "messages": [
-        { "sender" : 1,  "value": "I need an insurance!" },
-        { "sender" : 2, "value": "We have a great offering for that" }
+        {
+          "sender": "user_5",
+          "value": "I need an insurance!"
+        },
+        {
+          "sender": "user_2",
+          "value": "We have a great offering for that"
+        }
       ]
     }
-  ]
+  }
 }
