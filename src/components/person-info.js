@@ -12,7 +12,7 @@ export default class PersonInfo extends Component {
   constructor (props, context) {
     super(props, context);
 
-    this.props.chat.insuranceID = '10000000024';
+    //this.props.chat.insuranceId = '10000000024';
 
     this.loadCustomer();
 
@@ -23,15 +23,18 @@ export default class PersonInfo extends Component {
 
 
   loadCustomer () {
-    if (this.props.chat.insuranceID) {
-      zurich.getCustomer(this.props.chat.insuranceID).done((data) => {
+    if (this.props.chat.insuranceId) {
+      zurich.getCustomer(this.props.chat.insuranceId).done((data) => {
         this.setState({ customer: data.value[0] });
       });
     }
   }
 
   componentDidUpdate (prevProps) {
-    if (prevProps.chat.insuranceID !== this.props.chat.insuranceID) {
+
+    console.log('update person info', prevProps.chat.insuranceId, this.props.chat.insuranceId);
+
+    if (prevProps.chat.insuranceId !== this.props.chat.insuranceId) {
       this.loadCustomer();
     }
   }
@@ -42,7 +45,7 @@ export default class PersonInfo extends Component {
 
     let content;
 
-    if (chat.insuranceID) {
+    if (chat.insuranceId) {
       content = <InsuranceDetails chat={chat} customer={customer}/>
     } else {
       content = (
@@ -172,12 +175,12 @@ function formatStatus (status) {
 
 function formatPolicyLine (policyLine) {
   return ({
-      UNLine: '',
-      GEBLine: '',
-      RSLine: '',
-      MSLine: '',
-      HALine: '',
-      HRLine: ''
+      UNLineExists: 'accident insurance',
+      GEBLineExists: 'building insurance',
+      RSLineExists: 'legal protection',
+      MSLineExists: 'mobile protection',
+      HALineExists: 'general liability',
+      HRLineExists: 'home contents insurance'
     }[policyLine]) || policyLine.substring(0, policyLine.length - 6);
 }
 

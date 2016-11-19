@@ -4,7 +4,10 @@ import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle } from 'material-ui/Toolbar';
-
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import IconButton from 'material-ui/IconButton';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 
 export default class Chat extends Component {
 
@@ -24,20 +27,20 @@ export default class Chat extends Component {
   }
 
   componentDidUpdate (prevProps) {
-
-    if (this.props.chat && (!prevProps.chat ||  _.size(this.props.chat.messages) !== _.size(prevProps.chat.messages))) {
+    if (this.props.chat && (!prevProps.chat || _.size(this.props.chat.messages) !== _.size(prevProps.chat.messages))) {
       this.$messagesContainer.animate({
         scrollTop: _.reduce(this.$messagesContainer.children().get(), (sum, child) => {
-
-          return sum + $(child).height() + 5
-
+          return sum + $(child).height()
         }, 0)
       })
     }
   }
 
   render () {
-    const { chat, currentUser, onOpenInfo } = this.props;
+    const {
+      chat, currentUser,
+      onOpenInfo, onRequestAccountNumber, onOfferInsurance, onAssignClient
+    } = this.props;
 
     if (!_.isObject(chat)) {
       return <div/>;
@@ -54,7 +57,12 @@ export default class Chat extends Component {
 
     return <div>
       <div className='SubHeader'>
-        <FlatButton style={{color: '#fff'}} label={chat.name} onClick={() => onOpenInfo()}/>
+        <h1>{chat.name}</h1>
+        <Menu onOpenInfo={onOpenInfo}
+              onRequestAccountNumber={onRequestAccountNumber}
+              onOfferInsurance={onOfferInsurance}
+              onAssignClient={onAssignClient}
+              isAssigned={chat.assignedAdviser}/>
       </div>
 
       <div className='Messages' ref={(el) => this.$messagesContainer = $(el)}>
@@ -81,26 +89,48 @@ export default class Chat extends Component {
 
 function Message ({ message, currentUser, name }) {
   let nameHTML;
-  const type = message.sender === currentUser.id ? 'send' : 'received';
+  let type = 'received';
 
-
+  if (message.sender === currentUser.id) {
+    type = 'send'
+  } else if (message.sender === '925728457561572') {
+    type = 'bot-send'
+  }
 
   if (message.sender === currentUser.id) {
     nameHTML = <div className='Message__name'>Me</div>;
   } else if (message.sender === '925728457561572') {
     nameHTML = <div className='Message__name'>Bot</div>;
-
   } else {
     nameHTML = <div className='Message__name'>{name}</div>;
   }
 
-
   return (
-    <div className={'Message Message--' + type}>
-      {nameHTML}
-      <div className='Message__inner'>
-        {message.value}
+    <div className={'clearfix Message Message--' + type}>
+      <div>
+        {nameHTML}
+        <div className='Message__inner'>
+          {message.value}
+        </div>
       </div>
     </div>
-  )
+  );
+}
+
+function Menu ({
+  isAssigned,
+  onOpenInfo, onRequestAccountNumber, onOfferInsurance, onAssignClient
+}) {
+  return (
+    <IconMenu
+      iconButtonElement={<IconButton><MoreVertIcon color='#fff'/></IconButton>}
+      anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+      targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+    >
+      <MenuItem primaryText="Customer Details" onClick={onOpenInfo}/>
+      <MenuItem primaryText="Request account number" onClick={() => onRequestAccountNumber()}/>
+      <MenuItem primaryText="Offer insurance" onClick={onOfferInsurance}/>
+      {!isAssigned ? <MenuItem primaryText="Assign to my clients" onClick={onAssignClient}/> : '' }
+    </IconMenu>
+  );
 }

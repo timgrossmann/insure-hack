@@ -53,12 +53,23 @@ html, body {
   overflow: scroll;
 }
 
-.Message--send {
-  text-align: right;
+.clearfix:after {
+  visibility: hidden;
+  display: block;
+  font-size: 0;
+  content: " ";
+  clear: both;
+  height: 0;
+}
+
+.Message--send, .Message--bot-send {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
 }
 
 .Message--received {
- text-align: left;
+
 }
 
 .Message {
@@ -69,6 +80,7 @@ html, body {
   display: inline-block;
   padding: 10px;
   border-radius: 5px;
+  max-width: 300px;
 }
 
 .Message__name {
@@ -76,8 +88,10 @@ html, body {
   margin-bottom: 5px;
 }
 
-.Message--received .Message__inner {
+.Message--received .Message__inner,
+.Message--bot-send .Message__inner {
   background: #f1f0f0;
+
 }
 
 .Message--send .Message__inner {
