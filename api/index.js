@@ -50,7 +50,7 @@ app.post('/agent', function (req, res) {
       break
     case '--doginsurance':
       dogQuest[clientId] = { questionNum: 1, answers: {}}
-      sendInsuranceQuestion(clientId, SERVER_ID, 'What is the dogs race ?')
+      sendInsuranceQuestion(clientId, SERVER_ID, 'What kind of breed is your dog?\n(e.g. pudel)')
       questionsStarted[clientId] = true
       break
     default:
@@ -104,7 +104,7 @@ function receivedMessage(event) {
       if (needAuth[senderID]) {
        if(/[0-9]{11}/.test(messageText)) {
 
-         sendMessageToClient(senderID, recipientID, 'Thank you!\nYou have succefully authenticated')
+         sendMessageToClient(senderID, recipientID, 'Thank you!\nYou have successfully authenticated')
          needAuth[senderID] = false
          addInsuranceIdToClient(senderID, messageText)
 
@@ -159,7 +159,7 @@ function receivedMessage(event) {
 function sendOfferToClient (clientId, agentId) {
 
   getPrice(clientId).then(function (price) {
-    var subtitle = "Your personal special insurhack offer! Only " + price.yearly + "€/year or " + price.monthly + "€/month"
+    var subtitle = "Your personal, special insurhack offer! Only " + price.yearly + "€/year or " + price.monthly + "€/month"
 
     var secondMessageData = {
       recipient: {
@@ -210,7 +210,7 @@ function sendOfferToClient (clientId, agentId) {
 function getPrice(clientId) {
   return new Promise(function (resolve, reject) {
 
-    var cAns = {1: 'pitbull', 2: '123', 3: 'yes'}
+    var cAns = { 1: 'pitbull', 2: '123', 3: 'yes'}
 
     var token = '5974c270-a21b-3618-8056-3a2c0c0b8d31'
     var requestBody = require('./requestBody')(cAns[1], cAns[2], cAns[3])
@@ -360,7 +360,7 @@ function sendInsuranceQuestion (clientId, agentId, message) {
 function sendAuthenticationRequest (recipientId, agentId, message) {
   //console.log('Asked for authentification required')
 
-  message = "Please verify your insurance social security number.\nEither send it per Messenger or tell me to call you.\n\n" +
+  message = "Please verify your social security number.\nEither send it per Messenger or tell me to call you.\n\n" +
     "You can find it on your insurance card."
 
   var messageData = {
@@ -458,7 +458,7 @@ function getUserInfo (userId) {
         resolve({ firstName: firstName, lastName: lastName, userImg: userImg })
       } else {
         console.error("Unable to send message.")
-        resolve('unknown')
+        resolve({ firstName: 'unknown', lastName: 'unknown', userImg: 'unknown' })
       }
     })
   })
