@@ -32,9 +32,6 @@ export default class PersonInfo extends Component {
   }
 
   componentDidUpdate (prevProps) {
-
-    console.log('update person info', prevProps.chat.insuranceId, this.props.chat.insuranceId);
-
     if (prevProps.chat.insuranceId !== this.props.chat.insuranceId) {
       this.loadCustomer();
     }

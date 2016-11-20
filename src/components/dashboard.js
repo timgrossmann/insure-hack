@@ -37,8 +37,7 @@ export default class Dashboard extends Component {
     this.state = {
       selectedChatId: null,
       selectedTab: 'own',
-      ownChats: {},
-      unassignedChats: {},
+      chats: {},
       showInfo: true,
       loggedInAdviser: null
     };
@@ -46,12 +45,7 @@ export default class Dashboard extends Component {
     db.chat.on('value', (response) => {
       const chats = response.val();
 
-      if (this.state.loggedInAdviser) {
-        this.setState({
-          ownChats: _.pickBy(chats, (chat) => chat.assignedAdviser === this.state.loggedInAdviser.id),
-          unassignedChats: _.pickBy(chats, (chat) => chat.assignedAdviser == null)
-        });
-      }
+      this.setState({ chats });
     });
   }
 
@@ -78,20 +72,11 @@ export default class Dashboard extends Component {
       timestamp: Date.now()
     };
 
-    if (this.state.ownChats[this.state.selectedChatId]) {
-      this.setState(update(this.state, {
-        ownChats: {
-          [this.state.selectedChatId]: { messages: { [Math.random]: { $set: newMessage } } }
-        }
-      }));
-
-    } else if (this.state.unassignedChats[this.state.selectedChatId]) {
-      this.setState(update(this.state, {
-        unassignedChats: {
-          [this.state.selectedChatId]: { messages: { [Math.random]: { $set: newMessage } } }
-        }
-      }));
-    }
+    this.setState(update(this.state, {
+      chats: {
+        [this.state.selectedChatId]: { messages: { [Math.random]: { $set: newMessage } } }
+      }
+    }));
 
     messenger.send({
       agentId: this.state.loggedInAdviser.id,
@@ -123,9 +108,9 @@ export default class Dashboard extends Component {
   }
 
   render () {
-    const { selectedTab, selectedChatId, ownChats, unassignedChats, showInfo, loggedInAdviser } = this.state;
-    const selectedChat = ownChats[selectedChatId] || unassignedChats[selectedChatId];
+    const { selectedTab, selectedChatId, chats, showInfo, loggedInAdviser } = this.state;
 
+    let infoHTML;
     let mainContentHTML;
     let chatHTML;
     let accountMenuHTML;
@@ -136,11 +121,13 @@ export default class Dashboard extends Component {
                       onLogin={(adviser) => this.setState({ loggedInAdviser: adviser })}/>
       )
 
-
     } else {
+      let selectedChat = chats && chats[selectedChatId];
+      let ownChats = _.pickBy(chats, (chat) => chat.assignedAdviser === loggedInAdviser.id);
+      let unassignedChats = _.pickBy(chats, (chat) => chat.assignedAdviser == null);
 
       accountMenuHTML = (
-        <AccountMenu onLogout={() => this.setState({ loggedInAdviser: null })} />
+        <AccountMenu onLogout={() => this.setState({ loggedInAdviser: null })}/>
       );
 
       mainContentHTML = (
@@ -173,7 +160,11 @@ export default class Dashboard extends Component {
               onOfferInsurance={() => this.offerInsurance() }
               onRequestAccountNumber={() => this.requestAccountNumber() }
               onAssignAs/>
-      )
+      );
+
+      if (selectedChat && showInfo) {
+        infoHTML = <PersonInfo onClose={() => { this.hideInfo() }} chat={selectedChat}/>
+      }
     }
 
     return (
@@ -189,7 +180,7 @@ export default class Dashboard extends Component {
           <div className='ChatContent'>
             {chatHTML}
           </div>
-          { showInfo && selectedChat ? <PersonInfo onClose={() => { this.hideInfo() }} chat={selectedChat}/> : '' }
+          {infoHTML}
         </div>
       </div>
     )

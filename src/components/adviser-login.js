@@ -16,8 +16,6 @@ export default class AdviserLogin extends Component{
   }
 
   handleChange (value) {
-    console.log(value);
-
     this.setState({
       selectedAdviser: _.find(this.props.advisers, ({id}) => id === value)
     });
