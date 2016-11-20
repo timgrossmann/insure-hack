@@ -50,7 +50,7 @@ app.post('/agent', function (req, res) {
       break
     case '--doginsurance':
       dogQuest[clientId] = { questionNum: 1, answers: {}}
-      sendInsuranceQuestion(clientId, SERVER_ID, 'What kind of breed is your dog?\n(e.g. pudel)')
+      sendInsuranceQuestion(clientId, SERVER_ID, 'What kind of breed is your dog?\n(e.g. husky)')
       questionsStarted[clientId] = true
       break
     default:
@@ -119,7 +119,7 @@ function receivedMessage(event) {
             if (messageText.indexOf('?') === -1 && messageText.split(' ').length === 1) {
               dogQuest[senderID].questionNum += 1
               dogQuest[senderID].answers[1] = messageText
-              sendInsuranceQuestion(senderID, recipientID, 'What is his chipnumber ?\n(You can find it in his idcard)')
+              sendInsuranceQuestion(senderID, recipientID, 'What is his chipnumber ?')
             } else {
               sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
             }
@@ -134,7 +134,7 @@ function receivedMessage(event) {
             }
             break
           case 3:
-            if (messageText.indexOf('?') === -1 && (messageText === 'yes' || messageText === 'no')) {
+            if (messageText.indexOf('?') === -1 && (messageText.toLowerCase() === 'yes' || messageText.toLowerCase() === 'no')) {
               dogQuest[senderID].answers[3] = messageText
               sendMessageToClient(senderID, recipientID, 'Thank you!\nYour offer is being created')
               sendOfferToClient(senderID, recipientID)
@@ -144,7 +144,7 @@ function receivedMessage(event) {
             }
         }
       } else {
-        switch (messageText) {
+        switch (messageText.toLowerCase()) {
           case 'help':
             sendHelpMessage(senderID, recipientID, '')
             break
