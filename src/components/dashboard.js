@@ -35,7 +35,7 @@ export default class Dashboard extends Component {
       selectedChatId: null,
       selectedTab: 'own',
       chats: {},
-      showInfo: true,
+      showInfo: false,
       showAccountSettings: false,
       loggedInAdviserId: null,
       advisers: {}
@@ -150,8 +150,8 @@ export default class Dashboard extends Component {
 
       if (showAccountSettings) {
         accountMenuHTML = (
-          <CloseIcon style={{cursor: 'pointer'}}
-                     onClick={() => this.setState({showAccountSettings: false})} />
+          <CloseIcon style={{ cursor: 'pointer' }}
+                     onClick={() => this.setState({ showAccountSettings: false })}/>
         );
 
         mainContentHTML = (
@@ -166,9 +166,9 @@ export default class Dashboard extends Component {
 
         mainContentHTML = (
           <Tabs value={ selectedTab }
-                tabTemplateStyle={{color: '#000'}}
-                tabItemContainerStyle={{ background: '#f1f0f0', color: '#000'}}>
-            <Tab label="My Clients" value='own' onClick={() => this.selectTab('own')} style={{color: '#000'}}>
+                tabTemplateStyle={{ color: '#000' }}
+                tabItemContainerStyle={{ background: '#f1f0f0', color: '#000' }}>
+            <Tab label="My Clients" value='own' onClick={() => this.selectTab('own')} style={{ color: '#000' }}>
               <div>
                 <ChatList
                   chats={ownChats}
@@ -177,7 +177,8 @@ export default class Dashboard extends Component {
                 />
               </div>
             </Tab>
-            <Tab label="Others" value='unassigned' onClick={() => this.selectTab('unassigned')} style={{color: '#000'}}>
+            <Tab label="Others" value='unassigned' onClick={() => this.selectTab('unassigned')}
+                 style={{ color: '#000' }}>
               <ChatList
                 chats={unassignedChats}
                 selectedChat={selectedChat}
@@ -206,6 +207,27 @@ export default class Dashboard extends Component {
 
     return (
       <div>
+
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: -100,
+          width: '100%',
+          height: '250px',
+          background: '#039BE5',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 0 100px 75px'
+        }}>
+            <img src='assets/graph.svg' width="50" height='50'/>
+            <h1 style={{
+              color: '#fff',
+              fontWeight: 'normal',
+              marginLeft: '20px'
+            }}>MessageHub</h1>
+        </div>
+
         <div className='MainContent' style={cardStyle}>
           <div className='MainSidebar'>
             <div className='SubHeader'>
@@ -227,7 +249,6 @@ export default class Dashboard extends Component {
 
 function AccountMenu ({
   onLogout, onOpenAccountSettings
-
 }) {
   return (
     <IconMenu
