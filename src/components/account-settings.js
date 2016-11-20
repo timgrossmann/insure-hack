@@ -3,7 +3,6 @@ import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'mat
 import Toggle from 'material-ui/toggle';
 import Checkbox from 'material-ui/checkbox';
 
-
 export default class AccountSettings extends Component {
 
   render () {

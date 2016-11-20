@@ -165,8 +165,10 @@ export default class Dashboard extends Component {
         );
 
         mainContentHTML = (
-          <Tabs value={ selectedTab }>
-            <Tab label="My Clients" value='own' onClick={() => this.selectTab('own')}>
+          <Tabs value={ selectedTab }
+                tabTemplateStyle={{color: '#000'}}
+                tabItemContainerStyle={{ background: '#f1f0f0', color: '#000'}}>
+            <Tab label="My Clients" value='own' onClick={() => this.selectTab('own')} style={{color: '#000'}}>
               <div>
                 <ChatList
                   chats={ownChats}
@@ -175,7 +177,7 @@ export default class Dashboard extends Component {
                 />
               </div>
             </Tab>
-            <Tab label="Others" value='unassigned' onClick={() => this.selectTab('unassigned')}>
+            <Tab label="Others" value='unassigned' onClick={() => this.selectTab('unassigned')} style={{color: '#000'}}>
               <ChatList
                 chats={unassignedChats}
                 selectedChat={selectedChat}
