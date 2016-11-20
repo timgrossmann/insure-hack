@@ -10,6 +10,4 @@ var config = {
 
 firebase.initializeApp(config);
 
-export default {
-  chat: firebase.database().ref('chat')
-};
+export default firebase.database();

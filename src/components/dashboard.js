@@ -16,11 +16,6 @@ import db from '../utils/db';
 
 import '../../style/app.scss';
 
-const ADVISERS = [
-  { name: 'Frank Richard', id: 'adviser_1' },
-  { name: 'Sahra Frisch', id: 'adviser_2' }
-];
-
 const cardStyle = {
   color: 'rgba(0, 0, 0, 0.87)',
   backgroundColor: '#ffffff',
@@ -39,13 +34,19 @@ export default class Dashboard extends Component {
       selectedTab: 'own',
       chats: {},
       showInfo: true,
-      loggedInAdviser: null
+      loggedInAdviser: null,
+      advisers: {}
     };
 
-    db.chat.on('value', (response) => {
-      const chats = response.val();
+    db.ref().on('value', (response) => {
+      const val = response.val();
 
-      this.setState({ chats });
+      console.log(val);
+
+      this.setState({
+        chats: val.chat,
+        advisers: val.advisers
+      });
     });
   }
 
@@ -100,7 +101,7 @@ export default class Dashboard extends Component {
   }
 
   assignClient () {
-    db.chat.child(`${this.state.selectedChatId}/assignedAdviser`).set(this.state.loggedInAdviser.id);
+    db.ref(`/chat/${this.state.selectedChatId}/assignedAdviser`).set(this.state.loggedInAdviser.id);
 
     this.setState({
       selectedTab: 'own'
@@ -108,7 +109,7 @@ export default class Dashboard extends Component {
   }
 
   render () {
-    const { selectedTab, selectedChatId, chats, showInfo, loggedInAdviser } = this.state;
+    const { selectedTab, selectedChatId, chats, showInfo, loggedInAdviser, advisers } = this.state;
 
     let infoHTML;
     let mainContentHTML;
@@ -117,7 +118,7 @@ export default class Dashboard extends Component {
 
     if (!loggedInAdviser) {
       mainContentHTML = (
-        <AdviserLogin advisers={ADVISERS}
+        <AdviserLogin advisers={advisers}
                       onLogin={(adviser) => this.setState({ loggedInAdviser: adviser })}/>
       )
 
