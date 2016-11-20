@@ -44,6 +44,7 @@ export default class AdviserLogin extends Component{
             <br/>
 
             <RaisedButton label="login"
+                          primary={true}
                           fullWidth={true}
                           onClick={() => onLogin(selectedAdviser)}
                           disabled={!selectedAdviser}/>

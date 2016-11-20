@@ -11,7 +11,14 @@ html, body {
   margin: 0;
 }
 
+$highlight-1: #03A9F4;
+
+body {
+  background: #f2f0ee;
+}
+
 .MainContent {
+  margin: 150px 50px;
   display: flex;
   flex-direction: row;
   min-height:700px;
@@ -99,12 +106,13 @@ html, body {
 }
 
 .Message--send .Message__inner {
-  background: #00bcd4;
+  background: $highlight-1;
+  color: #fff;
 }
 
 .SubHeader {
   height: 48px;
-  background: #00bcd4;
+  background: $highlight-1;
   display: flex;
   align-items: center;
   padding: 0 14px;
@@ -128,7 +136,7 @@ html, body {
 
 .PersonInfo__content {
   padding: 10px;
-  height: 100%;
+  height: 650px;
   overflow: auto;
 }
 

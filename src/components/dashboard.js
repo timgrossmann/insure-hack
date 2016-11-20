@@ -11,6 +11,8 @@ import Chat from './chat';
 import PersonInfo from './person-info';
 import messenger from '../utils/messenger';
 import AdviserLogin from './adviser-login';
+import AccountSettings from './account-settings';
+import CloseIcon from 'material-ui/svg-icons/navigation/close';
 
 import db from '../utils/db';
 
@@ -33,15 +35,14 @@ export default class Dashboard extends Component {
       selectedChatId: null,
       selectedTab: 'own',
       chats: {},
-      showInfo: true,
-      loggedInAdviser: null,
+      showInfo: false,
+      showAccountSettings: false,
+      loggedInAdviserId: null,
       advisers: {}
     };
 
     db.ref().on('value', (response) => {
       const val = response.val();
-
-      console.log(val);
 
       this.setState({
         chats: val.chat,
@@ -68,7 +69,7 @@ export default class Dashboard extends Component {
 
   sendMessage (message) {
     const newMessage = {
-      sender: this.state.loggedInAdviser.id,
+      sender: this.state.loggedInAdviserId,
       value: message,
       timestamp: Date.now()
     };
@@ -80,7 +81,7 @@ export default class Dashboard extends Component {
     }));
 
     messenger.send({
-      agentId: this.state.loggedInAdviser.id,
+      agentId: this.state.loggedInAdviserId,
       clientId: this.state.selectedChatId,
       message
     })
@@ -88,79 +89,115 @@ export default class Dashboard extends Component {
 
   requestAccountNumber () {
     messenger.requestAccountNumber({
-      agentId: this.state.loggedInAdviser.id,
+      agentId: this.state.loggedInAdviserId,
       clientId: this.state.selectedChatId
     });
   }
 
   offerInsurance () {
     messenger.offerInsurance({
-      agentId: this.state.loggedInAdviser.id,
+      agentId: this.state.loggedInAdviserId,
       clientId: this.state.selectedChatId
     });
   }
 
   assignClient () {
-    db.ref(`/chat/${this.state.selectedChatId}/assignedAdviser`).set(this.state.loggedInAdviser.id);
+    db.ref(`/chat/${this.state.selectedChatId}/assignedAdviser`).set(this.state.loggedInAdviserId);
 
     this.setState({
       selectedTab: 'own'
     });
   }
 
+  setHolidayMode (isEnabled) {
+    this.setState(update(this.state, {
+      advisers: { [this.state.loggedInAdviserId]: { onHoliday: { $set: isEnabled } } }
+    }));
+
+    db.ref(`/advisers/${this.state.loggedInAdviserId}/onHoliday`).set(isEnabled);
+  }
+
   render () {
-    const { selectedTab, selectedChatId, chats, showInfo, loggedInAdviser, advisers } = this.state;
+    const { selectedTab, selectedChatId, chats, showInfo, loggedInAdviserId, showAccountSettings, advisers } = this.state;
 
     let infoHTML;
     let mainContentHTML;
     let chatHTML;
     let accountMenuHTML;
+    let sidebarHeaderHTML;
 
-    if (!loggedInAdviser) {
+    if (!loggedInAdviserId) {
+
+      sidebarHeaderHTML = <h1>Login</h1>;
+
       mainContentHTML = (
         <AdviserLogin advisers={advisers}
-                      onLogin={(adviser) => this.setState({ loggedInAdviser: adviser })}/>
+                      onLogin={(adviser) => this.setState({ loggedInAdviserId: adviser.id })}/>
       )
 
     } else {
+      let loggedInAdviser = advisers[loggedInAdviserId];
       let selectedChat = chats && chats[selectedChatId];
-      let ownChats = _.pickBy(chats, (chat) => chat.assignedAdviser === loggedInAdviser.id);
-      let unassignedChats = _.pickBy(chats, (chat) => chat.assignedAdviser == null);
+      let ownChats = _.pickBy(chats, (chat) => chat.assignedAdviser === loggedInAdviserId);
+      let unassignedChats = _.pickBy(chats, (chat) => {
+        return (
+          chat.assignedAdviser == null ||
+          (advisers[chat.assignedAdviser] && advisers[chat.assignedAdviser].onHoliday && chat.assignedAdviser !== loggedInAdviserId)
+        );
+      });
 
-      accountMenuHTML = (
-        <AccountMenu onLogout={() => this.setState({ loggedInAdviser: null })}/>
-      );
+      sidebarHeaderHTML = <h1>{loggedInAdviser.name}</h1>;
 
-      mainContentHTML = (
-        <Tabs value={ selectedTab }>
-          <Tab label="My Clients" value='own' onClick={() => this.selectTab('own')}>
-            <div>
+      if (showAccountSettings) {
+        accountMenuHTML = (
+          <CloseIcon style={{ cursor: 'pointer' }}
+                     onClick={() => this.setState({ showAccountSettings: false })}/>
+        );
+
+        mainContentHTML = (
+          <AccountSettings adviser={loggedInAdviser}
+                           onChangeHolidayMode={(isEnabled) => this.setHolidayMode(isEnabled)}/>
+        );
+      } else {
+        accountMenuHTML = (
+          <AccountMenu onLogout={() => this.setState({ loggedInAdviserId: null })}
+                       onOpenAccountSettings={() => this.setState({ showAccountSettings: true }) }/>
+        );
+
+        mainContentHTML = (
+          <Tabs value={ selectedTab }
+                tabTemplateStyle={{ color: '#000' }}
+                tabItemContainerStyle={{ background: '#f1f0f0', color: '#000' }}>
+            <Tab label="My Clients" value='own' onClick={() => this.selectTab('own')} style={{ color: '#000' }}>
+              <div>
+                <ChatList
+                  chats={ownChats}
+                  selectedChat={selectedChat}
+                  onSelect={(chat) => this.selectChat(chat) }
+                />
+              </div>
+            </Tab>
+            <Tab label="Others" value='unassigned' onClick={() => this.selectTab('unassigned')}
+                 style={{ color: '#000' }}>
               <ChatList
-                chats={ownChats}
+                chats={unassignedChats}
                 selectedChat={selectedChat}
                 onSelect={(chat) => this.selectChat(chat) }
               />
-            </div>
-          </Tab>
-          <Tab label="Others" value='unassigned' onClick={() => this.selectTab('unassigned')}>
-            <ChatList
-              chats={unassignedChats}
-              selectedChat={selectedChat}
-              onSelect={(chat) => this.selectChat(chat) }
-            />
-          </Tab>
-        </Tabs>
-      );
+            </Tab>
+          </Tabs>
+        );
+      }
 
       chatHTML = (
         <Chat chat={selectedChat}
+              advisers={advisers}
               currentUser={loggedInAdviser}
               onMessage={(message) => this.sendMessage(message)}
               onOpenInfo={() => this.showInfo()}
               onAssignClient={() => this.assignClient()}
-              onOfferInsurance={() => this.offerInsurance() }
-              onRequestAccountNumber={() => this.requestAccountNumber() }
-              onAssignAs/>
+              onOfferInsurance={() => this.offerInsurance()}
+              onRequestAccountNumber={() => this.requestAccountNumber() }/>
       );
 
       if (selectedChat && showInfo) {
@@ -170,10 +207,31 @@ export default class Dashboard extends Component {
 
     return (
       <div>
+
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: -100,
+          width: '100%',
+          height: '250px',
+          background: '#039BE5',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 0 100px 75px'
+        }}>
+            <img src='assets/graph.svg' width="50" height='50'/>
+            <h1 style={{
+              color: '#fff',
+              fontWeight: 'normal',
+              marginLeft: '20px'
+            }}>MessageHub</h1>
+        </div>
+
         <div className='MainContent' style={cardStyle}>
           <div className='MainSidebar'>
             <div className='SubHeader'>
-              <h1>{loggedInAdviser ? loggedInAdviser.name : 'Login'}</h1>
+              {sidebarHeaderHTML}
               {accountMenuHTML}
             </div>
             {mainContentHTML}
@@ -191,7 +249,6 @@ export default class Dashboard extends Component {
 
 function AccountMenu ({
   onLogout, onOpenAccountSettings
-
 }) {
   return (
     <IconMenu

@@ -37,7 +37,7 @@ export default class Chat extends Component {
 
   render () {
     const {
-      chat, currentUser,
+      chat, currentUser, advisers,
       onOpenInfo, onRequestAccountNumber, onOfferInsurance, onAssignClient
     } = this.props;
 
@@ -49,7 +49,23 @@ export default class Chat extends Component {
       .values()
       .sortBy((message) => message.timestamp)
       .map((message, i) => {
-        return <Message key={i} message={message} currentUser={currentUser} name={chat.name}/>
+        let name = chat.name;
+        let type = 'received';
+
+        if (message.sender === currentUser.id) {
+          name = currentUser.name;
+          type = 'send';
+
+        } else if (message.sender === '925728457561572') {
+          name = 'Bot';
+          type = 'bot-send';
+
+        } else if (advisers[message.sender]) {
+          name = advisers[message.sender].name;
+          type = 'bot-send';
+        }
+
+        return <Message key={i} message={message} name={name} type={type} />
       })
       .value();
 
@@ -87,28 +103,11 @@ export default class Chat extends Component {
   }
 }
 
-function Message ({ message, currentUser, name }) {
-  let nameHTML;
-  let type = 'received';
-
-  if (message.sender === currentUser.id) {
-    type = 'send'
-  } else if (message.sender === '925728457561572') {
-    type = 'bot-send'
-  }
-
-  if (message.sender === currentUser.id) {
-    nameHTML = <div className='Message__name'>Me</div>;
-  } else if (message.sender === '925728457561572') {
-    nameHTML = <div className='Message__name'>Bot</div>;
-  } else {
-    nameHTML = <div className='Message__name'>{name}</div>;
-  }
-
+function Message ({ message, name, type }) {
   return (
     <div className={'clearfix Message Message--' + type}>
       <div>
-        {nameHTML}
+        <div className='Message__name'>{name}</div>
         <div className='Message__inner'>
           {message.value}
         </div>
