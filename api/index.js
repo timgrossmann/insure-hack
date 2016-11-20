@@ -104,7 +104,7 @@ function receivedMessage(event) {
       if (needAuth[senderID]) {
        if(/[0-9]{11}/.test(messageText)) {
 
-         sendMessageToClient(senderID, recipientID, 'Thank you!\nYou have successfully authenticated')
+         sendMessageToClient(senderID, recipientID, 'Thank you!\nYou\'ve been successfully authenticated')
          needAuth[senderID] = false
          addInsuranceIdToClient(senderID, messageText)
 
@@ -119,7 +119,7 @@ function receivedMessage(event) {
             if (messageText.indexOf('?') === -1 && messageText.split(' ').length === 1) {
               dogQuest[senderID].questionNum += 1
               dogQuest[senderID].answers[1] = messageText
-              sendInsuranceQuestion(senderID, recipientID, 'What is his chipnumber ?\n(You can find it in his idcard)')
+              sendInsuranceQuestion(senderID, recipientID, 'What is the chip number of the dog?\n(You can find it in his idcard)')
             } else {
               sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
             }
@@ -128,9 +128,9 @@ function receivedMessage(event) {
             if (messageText.indexOf('?') === -1 && messageText.length === 3) {
               dogQuest[senderID].questionNum += 1
               dogQuest[senderID].answers[2] = messageText
-              sendInsuranceQuestionReplies(senderID, recipientID, 'Is it a compulsory insurance ?\n(yes/no)')
+              sendInsuranceQuestionReplies(senderID, recipientID, 'Is this a compulsory insurance?\n(yes/no)')
             } else {
-              sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
+              sendMessageToClient(senderID, recipientID, 'Your message will be forwarded to your agent.')
             }
             break
           case 3:
@@ -140,7 +140,7 @@ function receivedMessage(event) {
               sendOfferToClient(senderID, recipientID)
               questionsStarted[senderID] = false
             } else {
-              sendMessageToClient(senderID, recipientID, 'Your Message will be forwarded to your agent.')
+              sendMessageToClient(senderID, recipientID, 'Your message will be forwarded to your agent.')
             }
         }
       } else {
@@ -263,7 +263,7 @@ function updateMessages (clientId, sender, timestamp, message) {
 
     } else {
       addUser(clientId, sender, message, timestamp).then(function (result) {
-        sendMessageToClient(clientId, SERVER_ID, 'Your Agent was informed.\n\You will receive a response very soon.')
+        sendMessageToClient(clientId, SERVER_ID, 'Your agent has been informed.\n\You\'ll receive a response very soon.')
       })
     }
   })
@@ -360,7 +360,7 @@ function sendInsuranceQuestion (clientId, agentId, message) {
 function sendAuthenticationRequest (recipientId, agentId, message) {
   //console.log('Asked for authentification required')
 
-  message = "Please verify your social security number.\nEither send it per Messenger or tell me to call you.\n\n" +
+  message = "Please verify your insurance number.\nEither send it per messenger or tell me to call you.\n\n" +
     "You can find it on your insurance card."
 
   var messageData = {

@@ -102,7 +102,7 @@ export default class Dashboard extends Component {
   }
 
   assignClient () {
-    db.ref(`/chat/${this.state.selectedChatId}/assignedAdviser`).set(this.state.loggedInAdviser.id);
+    db.ref(`/chat/${this.state.selectedChatId}/assignedAdviser`).set(this.state.loggedInAdviserId);
 
     this.setState({
       selectedTab: 'own'
