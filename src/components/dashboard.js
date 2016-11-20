@@ -33,7 +33,7 @@ export default class Dashboard extends Component {
 
     this.state = {
       selectedChatId: null,
-      selectedTab: 'own',
+      selectedTab: 'unassigned',
       chats: {},
       showInfo: false,
       showAccountSettings: false,
