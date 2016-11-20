@@ -36,7 +36,7 @@ export default class Dashboard extends Component {
       selectedTab: 'own',
       chats: {},
       showInfo: true,
-      showAccountSettings: true,
+      showAccountSettings: false,
       loggedInAdviserId: null,
       advisers: {}
     };
@@ -69,7 +69,7 @@ export default class Dashboard extends Component {
 
   sendMessage (message) {
     const newMessage = {
-      sender: this.state.loggedInAdviseId,
+      sender: this.state.loggedInAdviserId,
       value: message,
       timestamp: Date.now()
     };
@@ -188,13 +188,13 @@ export default class Dashboard extends Component {
 
       chatHTML = (
         <Chat chat={selectedChat}
+              advisers={advisers}
               currentUser={loggedInAdviser}
               onMessage={(message) => this.sendMessage(message)}
               onOpenInfo={() => this.showInfo()}
               onAssignClient={() => this.assignClient()}
               onOfferInsurance={() => this.offerInsurance()}
-              onRequestAccountNumber={() => this.requestAccountNumber() }
-              onAssignAs/>
+              onRequestAccountNumber={() => this.requestAccountNumber() }/>
       );
 
       if (selectedChat && showInfo) {
