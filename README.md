@@ -27,7 +27,7 @@ Javascript, HTML, CSS, React, Express, Node.js, Facebook Message API, Zurich GI 
 ### Screenshots
 
 <img src="./img/fb.png" width="50%" height="500"/><img src="./img/messagehub.png" width="50%" height="500"/>
-- This is the FB Page of the MessageHub, here anyone can ask questions / Small MessageHub view, with no details of the customer displayed  
+- This is the FB Page of the MessageHub, here anyone can ask questions / Small MessageHub desktop view, with no details of the customer displayed  
 
 ![fbChat](./img/messagehub_details.png)
 - Details of the customer would appear on the right column
