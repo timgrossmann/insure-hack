@@ -31,9 +31,3 @@ Javascript, HTML, CSS, React, Express, Node.js, Facebook Message API, Zurich GI 
 
 ![fbChat](./img/messagehub_details.png)
 - Details of the customer would appear on the right column
-
-
-### Check out the GUI
-```bash
-npm start
-```
