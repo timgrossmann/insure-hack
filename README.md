@@ -22,7 +22,7 @@ For customers, the agents can easily view the current state of insurance in a de
 
 
 ### Built With
-Javascript, HTML, CSS, React, Express, Node.js, Facebook Message API, Zurich GI API
+Javascript, HTML, CSS, React, Express, Node.js, Facebook Message API, Zurich GI API, Firebase
 
 ### Screenshots
 
